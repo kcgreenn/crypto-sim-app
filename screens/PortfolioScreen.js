@@ -1,21 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth } from '../firebase';
 import UserMarketList from '../components/UserMarketList';
 import { getUserMarketData } from '../services/cryptoService';
+import { Store } from '../context/Store';
 
 const PortfolioScreen = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
+  const { state, dispatch } = useContext(Store);
+  const colorScheme = useColorScheme();
+  const { darkMode } = state;
 
   useEffect(() => {
     const fetchMarketData = async () => {
       const marketData = await getUserMarketData();
       setData(marketData);
     };
+    if (colorScheme === 'dark') {
+      dispatch({ type: 'SET_DARK_MODE', payload: true });
+    } else {
+      dispatch({ type: 'SET_DARK_MODE', payload: false });
+    }
     fetchMarketData();
-    // console.log(data[0].name);
   }, []);
 
   const handleSignOut = () => {
@@ -30,7 +43,7 @@ const PortfolioScreen = () => {
 
   if (data.length === 0)
     return (
-      <View style={styles.container}>
+      <View style={darkMode ? styles.darkContainer : styles.lightContainer}>
         <ActivityIndicator size="large" color="steelblue" />
       </View>
     );
@@ -45,9 +58,16 @@ const PortfolioScreen = () => {
 export default PortfolioScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  darkContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#21262d',
+  },
+  lightContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fefefe',
   },
 });

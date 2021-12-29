@@ -1,27 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth } from '../firebase';
 import MarketList from '../components/MarketList';
 import { getMarketData } from '../services/cryptoService';
+import { Store } from '../context/Store';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
+  const { state, dispatch } = useContext(Store);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     const fetchMarketData = async () => {
       const marketData = await getMarketData();
       setData(marketData);
     };
+
+    if (colorScheme === 'dark') {
+      dispatch({ type: 'SET_DARK_MODE', payload: true });
+    } else {
+      dispatch({ type: 'SET_DARK_MODE', payload: false });
+    }
     fetchMarketData();
-    // console.log(data[0].name);
   }, []);
 
   const handleSignOut = () => {
@@ -55,6 +64,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#dedede',
     // width: '100%',
   },
   // button: {

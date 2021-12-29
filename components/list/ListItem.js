@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  useColorScheme,
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const ListItem = ({
@@ -13,6 +20,7 @@ const ListItem = ({
   logoUrl,
   onPress,
 }) => {
+  const colorScheme = useColorScheme();
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.itemWrapper}>
@@ -37,17 +45,33 @@ const ListItem = ({
           )}
           {!type && (
             <View style={styles.titleWrapper}>
-              <Text style={styles.title}>
+              <Text
+                style={
+                  colorScheme === 'dark' ? styles.darkTitle : styles.lightTitle
+                }
+              >
                 {quantity > 0 ? `${quantity} - ` : ''}
                 {name}
               </Text>
-              <Text style={styles.subtitle}>{symbol.toUpperCase()}</Text>
+              <Text
+                style={
+                  colorScheme === 'dark'
+                    ? styles.darkSubtitle
+                    : styles.lightSubtitle
+                }
+              >
+                {symbol.toUpperCase()}
+              </Text>
             </View>
           )}
         </View>
 
         <View style={styles.rightWrapper}>
-          <Text style={styles.title}>
+          <Text
+            style={
+              colorScheme === 'dark' ? styles.darkTitle : styles.lightTitle
+            }
+          >
             $
             {quantity > 0
               ? (currentPrice * quantity).toLocaleString('en-US', {
@@ -97,10 +121,20 @@ const styles = StyleSheet.create({
     height: 48,
     width: 48,
   },
-  title: {
+  darkTitle: {
     fontSize: 18,
+    color: '#c9b08d',
   },
-  subtitle: {
+  lightTitle: {
+    fontSize: 18,
+    color: '#2e2e2e',
+  },
+  darkSubtitle: {
+    fontSize: 14,
+    color: '#A9ABB1',
+    marginTop: 4,
+  },
+  lightSubtitle: {
     fontSize: 14,
     color: '#A9ABB1',
     marginTop: 4,

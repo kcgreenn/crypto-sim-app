@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
+  useColorScheme,
   View,
 } from 'react-native';
-import ListItem from '../components/list/ListItem';
+import ListItem from '../components/list/TransactionItem';
+import { Store } from '../context/Store';
 
 const ListHeader = ({ title, principal }) => (
   <React.Fragment>
@@ -24,13 +26,16 @@ const ListHeader = ({ title, principal }) => (
 );
 
 const TransactionsScreen = () => {
+  const { state, dispatch } = useContext(Store);
+  const [darkMode, setDarkMode] = useState(state.darkMode);
+  const colorScheme = useColorScheme();
   const data = [
     {
       id: 'ok2qj3n',
       name: 'Bitcoin',
       symbol: 'btc',
       pricePerCoin: 23504,
-      type: 'sell',
+      coinAmount: -0.2,
       date: 'Jan 13, 2021',
     },
     {
@@ -38,7 +43,7 @@ const TransactionsScreen = () => {
       name: 'Bitcoin',
       symbol: 'btc',
       pricePerCoin: 13504,
-      type: 'buy',
+      coinAmount: 1,
       date: 'Jan 1, 2021',
     },
     {
@@ -46,13 +51,20 @@ const TransactionsScreen = () => {
       name: 'Ethereum',
       symbol: 'eth',
       pricePerCoin: 1203,
-      type: 'buy',
+      coinAmount: 0.8,
       date: 'Jan 3, 2021',
     },
   ];
+  useEffect(() => {
+    if (colorScheme === 'dark') {
+      dispatch({ type: 'SET_DARK_MODE', payload: true });
+    } else {
+      dispatch({ type: 'SET_DARK_MODE', payload: false });
+    }
+  }, []);
   return (
     <View>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={darkMode ? styles.darkContainer : lightContainer}>
         <FlatList
           keyExtractor={(item) => item.id}
           data={data}
@@ -63,7 +75,7 @@ const TransactionsScreen = () => {
               type={item.type}
               currentPrice={item.pricePerCoin}
               date={item.date}
-              //   logoUrl={item.image}
+              coinAmount={item.coinAmount}
             />
           )}
           ListHeaderComponent={
@@ -79,22 +91,14 @@ const TransactionsScreen = () => {
 export default TransactionsScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    // flex: 1,
-    width: '95%',
-    marginLeft: '2.5%',
-    backgroundColor: '#fff',
+  lightContainer: {
+    width: '100%',
+    backgroundColor: '#fefefe',
   },
-  contentContainer: {},
-  bottomSheet: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  darkContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#21262d',
   },
   titleWrapper: {
     marginTop: 16,

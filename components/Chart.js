@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSharedValue } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
+import { Store } from '../context/Store';
 
 const Chart = ({
   currentPrice,
@@ -31,6 +32,8 @@ const Chart = ({
   const latestCurrentPrice = useSharedValue(currentPrice); // Creates a value that can be shared btwn the UI and JS threads
   const [chartReady, setChartReady] = useState(false);
   const [selectedTime, setSelectedTime] = useState('7d');
+  const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
 
   const { width: SIZE } = Dimensions.get('window');
 
@@ -61,19 +64,29 @@ const Chart = ({
     <ChartPathProvider
       data={{ points: sparkline, smoothingStrategy: 'bezier' }}
     >
-      <View style={styles.chartWrapper}>
-        <TouchableOpacity style={styles.titleWrapper}>
+      <View
+        style={[
+          styles.chartWrapper,
+          { backgroundColor: darkMode ? '#21262d' : '#fefefe' },
+        ]}
+      >
+        <View style={styles.titleWrapper}>
           <View style={styles.upperTitle}>
             <View style={styles.upperLeftTitle}>
               <Image source={{ uri: logoUrl }} style={styles.image} />
-              <Text style={styles.subtitle}>
+              <Text style={darkMode ? styles.darkSubtitle : lightSubtitle}>
                 {name} ({symbol.toUpperCase()})
               </Text>
             </View>
-            <Text style={styles.subtitle}>7d</Text>
+            <Text style={darkMode ? styles.darkSubtitle : lightSubtitle}>
+              7d
+            </Text>
           </View>
           <View style={styles.lowerTitle}>
-            <ChartYLabel format={formatUSD} style={styles.boldTitle} />
+            <ChartYLabel
+              format={formatUSD}
+              style={darkMode ? styles.darkBoldTitle : styles.lightBoldTitle}
+            />
             <Text
               style={[
                 styles.title,
@@ -85,10 +98,14 @@ const Chart = ({
               {priceChangePercentage7d.toFixed(2)}%
             </Text>
           </View>
-        </TouchableOpacity>
+        </View>
         {chartReady ? (
           <View style={styles.chartLineWrapper}>
-            <ChartPath height={SIZE / 2} stroke="black" width={SIZE} />
+            <ChartPath
+              height={SIZE / 2}
+              stroke={darkMode ? '#fefefe' : '#3e3e3e'}
+              width={SIZE}
+            />
             <ChartDot style={{ backgroundColor: 'turquoise ' }} />
           </View>
         ) : null}
@@ -99,7 +116,7 @@ const Chart = ({
 
 const styles = StyleSheet.create({
   chartWrapper: {
-    marginVertical: 16,
+    paddingTop: 6,
   },
   titleWrapper: {
     marginHorizontal: 16,
@@ -123,13 +140,23 @@ const styles = StyleSheet.create({
     width: 24,
     marginRight: 4,
   },
-  subtitle: {
+  darkSubtitle: {
     fontSize: 14,
     color: '#A9ABB1',
   },
-  boldTitle: {
+  lightSubtitle: {
+    fontSize: 14,
+    color: '#A9ABB1',
+  },
+  darkBoldTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#fefefe',
+  },
+  lightBoldTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#3e3e3e',
   },
   title: {
     fontSize: 18,
@@ -139,8 +166,6 @@ const styles = StyleSheet.create({
   },
   tradeBtn: {
     borderRadius: 5,
-    // borderColor: 'blue',
-    // borderWidth: 1,
     width: 84,
     backgroundColor: 'steelblue',
     display: 'flex',

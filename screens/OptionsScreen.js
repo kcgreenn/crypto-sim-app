@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -10,49 +10,59 @@ import {
   Alert,
   Pressable,
   Modal,
+  useColorScheme,
 } from 'react-native';
-import { auth, db } from '../firebase';
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-} from '@firebase/auth';
+  auth,
+  db,
+  usersRef,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+} from '../firebase';
+import { signOut } from '@firebase/auth';
 import { useNavigation } from '@react-navigation/core';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Divider } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
 import CurrencyPicker from '../components/CurrencyPicker';
+import { Store } from '../context/Store';
 
-const LoginScreen = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const OptionsScreen = () => {
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [darkMode, setDarkMode] = useState(false);
-  const [nativeCurrency, setNativeCurrency] = useState('USD');
+
   const [modalOpen, setModalOpen] = useState(false);
+  const { state, dispatch } = useContext(Store);
+  const colorScheme = useColorScheme();
+  const [nativeCurrency, setNativeCurrency] = useState(state.domesticCurrency);
 
   const navigation = useNavigation();
 
-  // useEffect(() => {
-  //   const unsubscribe = auth.onAuthStateChanged((user) => {
-  //     if (user) {
-  //       navigation.navigate('Portfolio');
-  //     }
-  //   });
-  //   return unsubscribe;
-  // }, [currentUser]);
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (colorScheme === 'dark') {
+        dispatch({ type: 'SET_DARK_MODE', payload: true });
+      } else {
+        dispatch({ type: 'SET_DARK_MODE', payload: false });
+      }
+    });
+    return unsubscribe;
+  }, [currentUser]);
 
   const handleSignout = () => {
     signOut(auth)
       .then((v) => {
         setCurrentUser(null);
+        dispatch({ type: 'LOGOUT' });
         navigation.navigate('Login');
       })
       .catch((error) => console.log(error.message));
   };
   const handleReset = () => {
     Alert.alert(
-      'This will delete all buys/sells and reset your account balance.',
+      'This will delete all transactions and reset your account balance.',
       '',
       [
         {
@@ -78,11 +88,16 @@ const LoginScreen = () => {
       [
         {
           text: 'Cancel',
-          onPress: () => console.log('Cancelled'),
+          onPress: () => {
+            console.log('Cancelled');
+          },
         },
         {
           text: 'Confirm',
-          onPress: () => console.log('Deleted'),
+          onPress: () => {
+            // TODO: delete account from firestore
+            console.log('Deleted');
+          },
         },
       ],
       {
@@ -91,21 +106,22 @@ const LoginScreen = () => {
       }
     );
   };
-  const handleDarkmodeToggle = () => {
-    setDarkMode(!darkMode);
-  };
 
   const handleCurrencyModalBtn = () => {
     setModalOpen(!modalOpen);
   };
 
   const handleCurrencySelect = () => {
+    dispatch({ type: 'SET_DOMESTIC_CURRENCY', payload: nativeCurrency });
     setModalOpen(!modalOpen);
   };
 
   const user = auth.currentUser;
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView
+      style={state.darkMode ? styles.darkContainer : styles.lightContainer}
+      behavior="padding"
+    >
       <View style={styles.centeredView}>
         <Modal
           animationType="slide"
@@ -161,33 +177,89 @@ const LoginScreen = () => {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           alignItems: 'flex-start',
           paddingLeft: '10%',
         }}
       >
-        <Text style={styles.userEmail}>{user.email}</Text>
-        <Text style={{ fontSize: 36, fontWeight: 'bold', marginBottom: 24 }}>
+        <Text
+          style={[
+            styles.userEmail,
+            { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+          ]}
+        >
+          {user.email}
+        </Text>
+        <Text
+          style={{
+            fontSize: 36,
+            fontWeight: 'bold',
+            marginBottom: 24,
+            color: state.darkMode ? '#fefefe' : '#0e0e0e',
+          }}
+        >
           Test
         </Text>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+          ]}
+        >
+          Account
+        </Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
             onPress={handleCurrencyModalBtn}
           >
-            <Text style={styles.buttonText}>Native Currency</Text>
-            <Text style={styles.buttonText}>{nativeCurrency}</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+              ]}
+            >
+              Native Currency
+            </Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+              ]}
+            >
+              {state.domesticCurrency}
+            </Text>
           </TouchableOpacity>
           <View style={styles.button} onPress={handleCurrencyModalBtn}>
-            <Text style={styles.buttonText}>Balance</Text>
-            <Text style={styles.buttonText}>15000</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+              ]}
+            >
+              Balance
+            </Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+              ]}
+            >
+              {state.principal}
+            </Text>
           </View>
           <TouchableOpacity style={styles.button} onPress={handleReset}>
-            <Text style={styles.buttonText}>Reset Balances</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+              ]}
+            >
+              Reset Balances
+            </Text>
             <MaterialCommunityIcons
               name="chevron-right"
-              color={'black'}
+              color={state.darkMode ? 'white' : 'black'}
               size={26}
             />
           </TouchableOpacity>
@@ -196,7 +268,7 @@ const LoginScreen = () => {
           style={[
             styles.buttonContainer,
             {
-              marginTop: 36,
+              marginTop: 48,
             },
           ]}
         >
@@ -204,19 +276,30 @@ const LoginScreen = () => {
             style={[
               styles.buttonOutline,
               {
-                borderColor: '#cecece',
-                borderWidth: 1,
-                borderRadius: '10',
+                backgroundColor: state.darkMode ? '#3e3e3e' : '#fefefe',
               },
             ]}
             onPress={handleSignout}
           >
-            <Text style={[styles.buttonOutlineText, styles.dangerText]}>
+            <Text
+              style={[
+                styles.buttonOutlineText,
+                styles.dangerText,
+                {
+                  backgroundColor: state.darkMode ? '#3e3e3e' : '#fefefe',
+                },
+              ]}
+            >
               Sign Out
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.buttonOutline}
+            style={[
+              styles.buttonOutline,
+              {
+                backgroundColor: state.darkMode ? '#3e3e3e' : '#fefefe',
+              },
+            ]}
             onPress={handleAccountDelete}
           >
             <Text style={[styles.buttonOutlineText, styles.dangerText]}>
@@ -229,13 +312,20 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default OptionsScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  lightContainer: {
     flex: 1,
-    backgroundColor: 'white',
-    paddingTop: 48,
+    backgroundColor: '#fefefe',
+    paddingTop: 12,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+  },
+  darkContainer: {
+    flex: 1,
+    backgroundColor: '#21262d',
+    paddingTop: 12,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
@@ -287,7 +377,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   button: {
-    color: 'black',
     width: '100%',
     display: 'flex',
     flexDirection: 'row',
@@ -300,7 +389,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonOutline: {
-    backgroundColor: 'white',
     marginVertical: 8,
     width: '90%',
     padding: 15,
@@ -309,9 +397,6 @@ const styles = StyleSheet.create({
   },
   buttonOutlineText: {
     fontSize: 16,
-  },
-  danger: {
-    backgroundColor: '#f44336',
   },
   dangerText: {
     color: '#dc3545',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -23,11 +23,13 @@ import {
 } from '@firebase/auth';
 import { useNavigation } from '@react-navigation/core';
 import { isEmpty } from '../services/inputValidation';
+import { Store } from '../context/Store';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const { state, dispatch } = useContext(Store);
 
   const navigation = useNavigation();
 
@@ -44,6 +46,11 @@ const LoginScreen = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
+        // TODO: Get user info from firestore/dispatch to state
+        dispatch({
+          type: 'SET_USER',
+          payload: { name: username, email: email },
+        });
       })
       .catch((error) => {
         const errorCode = error.code;

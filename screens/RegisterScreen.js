@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -23,13 +23,14 @@ import {
 } from '@firebase/auth';
 import { useNavigation } from '@react-navigation/core';
 import { isEmpty, isMatch } from '../services/inputValidation';
+import { Store } from '../context/Store';
 
 const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
-
+  const { state, dispatch } = useContext(Store);
   const navigation = useNavigation();
 
   const handleSignUp = () => {
@@ -58,13 +59,23 @@ const RegisterScreen = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
+        const defaultPrincipal = 10000;
+        const defaultCurrency = 'USD';
         // Create user document in firestore
         const docRef = await setDoc(doc(db, 'users', user.uid), {
           name: username,
-          principal: 10000,
+          email: email,
+          principal: defaultPrincipal,
+          domesticCurrency: defaultCurrency,
           assets: [],
           transactions: [],
         });
+        dispatch({
+          type: 'SET_USER',
+          payload: { name: username, email: email },
+        });
+        dispatch({ type: 'SET_PRINCIPAL', payload: defaultPrincipal });
+        dispatch({ type: 'SET_DOMESTIC_CURRENCY', payload: defaultCurrency });
       })
       .catch((error) => {
         const errorCode = error.code;

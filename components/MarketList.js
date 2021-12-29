@@ -1,11 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import ListItem from './list/ListItem';
 import Chart from './Chart';
 import { getMarketData } from '../services/cryptoService';
 import { ActivityIndicator } from 'react-native-paper';
+import { Store } from '../context/Store';
 
 const ListHeader = ({ title, principal }) => (
   <React.Fragment>
@@ -39,9 +41,12 @@ const MarketList = ({ title, data, principal }) => {
 
   const bottomSheetModalRef = useRef(null);
 
-  const snapPoints = useMemo(() => ['60%'], []);
+  const snapPoints = useMemo(() => ['55%'], []);
 
   const handleSheetChanges = () => {};
+
+  const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
 
   const openModal = (item) => {
     setSelectedCoinData(item);
@@ -52,7 +57,9 @@ const MarketList = ({ title, data, principal }) => {
   }
   return (
     <BottomSheetModalProvider>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView
+        style={darkMode ? styles.darkContainer : styles.lightContainer}
+      >
         <FlatList
           keyExtractor={(item) => item.id}
           data={data}
@@ -76,7 +83,7 @@ const MarketList = ({ title, data, principal }) => {
       </SafeAreaView>
       <BottomSheetModal
         ref={bottomSheetModalRef}
-        style={styles.bottomSheet}
+        style={[darkMode ? styles.darkBottomSheet : styles.lightBottomSheet]}
         index={0}
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
@@ -93,7 +100,7 @@ const MarketList = ({ title, data, principal }) => {
             sparkline={selectedCoinData.sparkline_in_7d.price}
           />
         ) : null}
-        <View style={styles.tradeView}>
+        <View style={darkMode ? styles.darkTradeView : lightTradeView}>
           <TouchableOpacity style={styles.tradeBtn}>
             <Text style={styles.tradeText}>Trade</Text>
           </TouchableOpacity>
@@ -102,15 +109,19 @@ const MarketList = ({ title, data, principal }) => {
     </BottomSheetModalProvider>
   );
 };
-
 const styles = StyleSheet.create({
-  container: {
+  lightContainer: {
     flex: 1,
-    width: '95%',
-    backgroundColor: '#fff',
+    width: '100%',
+    backgroundColor: '#fefefe',
   },
-  contentContainer: {},
-  bottomSheet: {
+  darkContainer: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#21262d',
+    color: '#c9b08d',
+  },
+  darkBottomSheet: {
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -119,6 +130,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    backgroundColor: '#21262d',
+  },
+  lightBottomSheet: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    backgroundColor: '#fefefe',
   },
   titleWrapper: {
     marginTop: 16,
@@ -148,10 +171,17 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#3e3e3e',
   },
-  tradeView: {
+  darkTradeView: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
+    paddingVertical: 16,
+    backgroundColor: '#21262d',
+  },
+  lightTradeView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    backgroundColor: '#fefefe',
   },
   tradeBtn: {
     backgroundColor: '#0251fd',

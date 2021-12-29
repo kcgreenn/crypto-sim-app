@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Store } from '../../context/Store';
 
 const TransactionItem = ({
   name,
@@ -8,42 +9,44 @@ const TransactionItem = ({
   quantity,
   currentPrice,
   priceChangePercentage7d,
-  type,
+  coinAmount,
   date,
   logoUrl,
   onPress,
 }) => {
+  const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
+
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.itemWrapper}>
         <View style={styles.leftWrapper}>
-          {type ? (
-            type === 'buy' ? (
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-                Converted from {name}
-              </Text>
-            ) : (
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-                Converted to {name}
-              </Text>
-            )
+          {coinAmount > 0 ? (
+            <Text
+              style={[
+                darkMode ? styles.darkTitle : styles.lightMode,
+                { fontSize: 18, fontWeight: 'bold' },
+              ]}
+            >
+              Converted from {name}
+            </Text>
           ) : (
-            <Image
-              source={{
-                uri: logoUrl,
-              }}
-              style={styles.image}
-            />
+            <Text
+              style={[
+                darkMode ? styles.darkTitle : styles.lightMode,
+                { fontSize: 18, fontWeight: 'bold' },
+              ]}
+            >
+              Converted to {name}
+            </Text>
           )}
+          <Text style={darkMode ? styles.darkSubtitle : styles.lightSubtitle}>
+            Using USD
+          </Text>
         </View>
         <View style={styles.rightWrapper}>
-          <Text style={styles.title}>
-            $
-            {quantity > 0
-              ? (currentPrice * quantity).toLocaleString('en-US', {
-                  currency: 'USD',
-                })
-              : currentPrice.toLocaleString('en-US', { currency: 'USD' })}
+          <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
+            {coinAmount}
           </Text>
           {priceChangePercentage7d ? (
             <Text
@@ -55,7 +58,17 @@ const TransactionItem = ({
               {priceChangePercentage7d.toFixed(2)}%
             </Text>
           ) : (
-            <Text style={styles.subtitle}>{date}</Text>
+            <Text
+              style={[
+                darkMode ? styles.darkSubtitle : styles.lightSubtitle,
+                { color: '#34c759' },
+              ]}
+            >
+              {(currentPrice * coinAmount).toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              })}
+            </Text>
           )}
         </View>
       </View>
@@ -77,8 +90,8 @@ const styles = StyleSheet.create({
     borderColor: '#cecece',
   },
   leftWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
   },
   titleWrapper: {
     marginLeft: 8,
@@ -87,12 +100,22 @@ const styles = StyleSheet.create({
     height: 48,
     width: 48,
   },
-  title: {
+  darkTitle: {
     fontSize: 18,
+    color: '#fefefe',
   },
-  subtitle: {
+  lightTitle: {
+    fontSize: 18,
+    color: '#c9b08d',
+  },
+  darkSubtitle: {
     fontSize: 14,
-    color: '#A9ABB1',
+    color: '#cecece',
+    marginTop: 4,
+  },
+  lightSubtitle: {
+    fontSize: 14,
+    color: '#3e3e3e',
     marginTop: 4,
   },
   rightWrapper: {
