@@ -7,33 +7,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  auth,
-  collection,
-  usersRef,
-  db,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-} from '../firebase';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from '@firebase/auth';
-import { useNavigation } from '@react-navigation/core';
 import { isEmpty } from '../services/inputValidation';
 import { Store } from '../context/Store';
+import { loginUser } from '../firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
+
   const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
 
-  const navigation = useNavigation();
-
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
+    // Validate user input
     if (isEmpty(email)) {
       alert('Email is required');
       return;
@@ -42,31 +29,46 @@ const LoginScreen = () => {
       alert('Password is required');
       return;
     }
-
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        // TODO: Get user info from firestore/dispatch to state
-        dispatch({
-          type: 'SET_USER',
-          payload: { name: username, email: email },
-        });
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorMessage);
+    try {
+      // Submit login information to firebase
+      const userInfo = await loginUser(email, password);
+      // Save user info to application state
+      dispatch({
+        type: 'LOGIN',
+        payload: userInfo,
       });
+      // Save user info to local storage
+      await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
+    } catch (error) {
+      console.log(error);
+    }
   };
+  useEffect(() => {}, []);
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView
+      style={darkMode ? styles.darkContainer : styles.lightContainer}
+      behavior="padding"
+    >
+      <Text
+        style={{
+          color: darkMode ? '#dedede' : '#1a1a1a',
+          fontSize: 24,
+          marginBottom: 48,
+        }}
+      >
+        Crypto Market Sim
+      </Text>
       <View style={styles.inputContainer}>
+        <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e' }}>Email</Text>
         <TextInput
           placeholder="Email"
           style={styles.input}
           value={email}
           onChangeText={(text) => setEmail(text)}
         ></TextInput>
+        <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
+          Password
+        </Text>
         <TextInput
           placeholder="Password"
           secureTextEntry
@@ -92,10 +94,17 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  lightContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fefefe',
+  },
+  darkContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#21262d',
   },
   inputContainer: {
     width: '80%',
@@ -107,6 +116,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginTop: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#333',
   },
   buttonContainer: {
     width: '60%',

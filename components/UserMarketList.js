@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -14,10 +14,11 @@ import {
   BottomSheetModalProvider,
 } from '@gorhom/bottom-sheet';
 
-import ListItem from './list/ListItem';
+import UserListItem from './list/UserListItem';
 import Chart from './Chart';
 import { getMarketData } from '../services/cryptoService';
 import { ActivityIndicator } from 'react-native-paper';
+import { Store } from '../context/Store';
 
 export const ListHeader = ({ title, totalValue, principal }) => (
   <React.Fragment>
@@ -33,7 +34,7 @@ export const ListHeader = ({ title, totalValue, principal }) => (
     </View>
     <View style={styles.titleWrapper}>
       <Text style={styles.subtitle}>Cash&nbsp;&nbsp;&nbsp;</Text>
-      {principal !== null ? (
+      {principal ? (
         <Text style={styles.subtitle}>
           ${principal.toLocaleString('en-US', { currency: 'USD' })}
         </Text>
@@ -46,16 +47,15 @@ export const ListHeader = ({ title, totalValue, principal }) => (
 const UserMarketList = ({ title, data, assets, principal }) => {
   const [selectedCoinData, setSelectedCoinData] = useState(null);
   const [totalValue, setTotalValue] = useState(0);
-
+  const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
   const bottomSheetModalRef = useRef(null);
-
-  const snapPoints = useMemo(() => ['60%'], []);
-
+  const snapPoints = useMemo(() => ['55%'], []);
   const handleSheetChanges = () => {};
 
   const calcTotalValue = () => {
     let tempTotalValue = 0;
-    assets.forEach((asset, index) => {
+    assets?.forEach((asset, index) => {
       tempTotalValue += data[index].current_price * asset.amount;
     });
     tempTotalValue += principal;
@@ -71,16 +71,18 @@ const UserMarketList = ({ title, data, assets, principal }) => {
   }
   useEffect(() => {
     calcTotalValue();
-  }, []);
+  }, [assets]);
 
   return (
     <BottomSheetModalProvider>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView
+        style={darkMode ? styles.darkContainer : styles.lightContainer}
+      >
         <FlatList
           keyExtractor={(item) => item.id}
           data={data}
           renderItem={({ item }) => (
-            <ListItem
+            <UserListItem
               name={item.name}
               symbol={item.symbol}
               quantity={
@@ -98,6 +100,7 @@ const UserMarketList = ({ title, data, assets, principal }) => {
             <ListHeader
               title={title}
               totalValue={totalValue}
+              totalValue={1}
               principal={principal}
             />
           }
@@ -134,13 +137,17 @@ const UserMarketList = ({ title, data, assets, principal }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  lightContainer: {
     flex: 1,
-    width: '95%',
-    backgroundColor: '#fff',
+    width: '100%',
+    backgroundColor: '#fefefe',
   },
-  contentContainer: {},
-  bottomSheet: {
+  darkContainer: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#21262d',
+  },
+  darkBottomSheet: {
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -149,6 +156,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    backgroundColor: '#21262d',
+  },
+  lightBottomSheet: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    backgroundColor: '#fefefe',
   },
   titleWrapper: {
     marginTop: 16,
@@ -175,11 +194,20 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#A9ABB1',
     marginTop: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#3e3e3e',
   },
-  tradeView: {
+  darkTradeView: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
+    paddingVertical: 16,
+    backgroundColor: '#21262d',
+  },
+  lightTradeView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    backgroundColor: '#fefefe',
   },
   tradeBtn: {
     backgroundColor: '#0251fd',

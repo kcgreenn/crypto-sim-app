@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -7,20 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  auth,
-  collection,
-  usersRef,
-  db,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-} from '../firebase';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from '@firebase/auth';
 import { useNavigation } from '@react-navigation/core';
 import { isEmpty, isMatch } from '../services/inputValidation';
 import { Store } from '../context/Store';
@@ -31,6 +17,7 @@ const RegisterScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
   const navigation = useNavigation();
 
   const handleSignUp = () => {
@@ -56,49 +43,48 @@ const RegisterScreen = () => {
       return;
     }
     // Create new user
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(async (userCredential) => {
-        const user = userCredential.user;
-        const defaultPrincipal = 10000;
-        const defaultCurrency = 'USD';
-        // Create user document in firestore
-        const docRef = await setDoc(doc(db, 'users', user.uid), {
-          name: username,
-          email: email,
-          principal: defaultPrincipal,
-          domesticCurrency: defaultCurrency,
-          assets: [],
-          transactions: [],
-        });
-        dispatch({
-          type: 'SET_USER',
-          payload: { name: username, email: email },
-        });
-        dispatch({ type: 'SET_PRINCIPAL', payload: defaultPrincipal });
-        dispatch({ type: 'SET_DOMESTIC_CURRENCY', payload: defaultCurrency });
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorMessage);
-      });
+    dispatch({
+      type: 'REGISTER',
+      payload: { username: username, email: email, password: password },
+    });
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView
+      style={darkMode ? styles.darkContainer : styles.lightContainer}
+      behavior="padding"
+    >
+      <Text
+        style={{
+          color: darkMode ? '#dedede' : '#3e3e3e',
+          fontSize: 24,
+          marginBottom: 48,
+        }}
+      >
+        Crypto Market Sim
+      </Text>
       <View style={styles.inputContainer}>
+        <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e' }}>
+          Username
+        </Text>
         <TextInput
           placeholder="Name"
           style={styles.input}
           value={username}
           onChangeText={(text) => setUsername(text)}
         ></TextInput>
+        <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
+          Email
+        </Text>
         <TextInput
           placeholder="Email"
           style={styles.input}
           value={email}
           onChangeText={(text) => setEmail(text)}
         ></TextInput>
+        <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
+          Password
+        </Text>
         <TextInput
           placeholder="Password"
           secureTextEntry
@@ -106,6 +92,9 @@ const RegisterScreen = () => {
           value={password}
           onChangeText={(text) => setPassword(text)}
         ></TextInput>
+        <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
+          Confirm Password
+        </Text>
         <TextInput
           placeholder="Confirm Password"
           secureTextEntry
@@ -131,10 +120,17 @@ const RegisterScreen = () => {
 export default RegisterScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  lightContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fefefe',
+  },
+  darkContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#21262d',
   },
   inputContainer: {
     width: '80%',

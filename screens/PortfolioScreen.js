@@ -1,47 +1,44 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  useColorScheme,
-  View,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/core';
-import { auth } from '../firebase';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import UserMarketList from '../components/UserMarketList';
 import { getUserMarketData } from '../services/cryptoService';
 import { Store } from '../context/Store';
+import { getUserData } from '../firebase';
 
 const PortfolioScreen = () => {
-  const navigation = useNavigation();
   const [data, setData] = useState([]);
   const { state, dispatch } = useContext(Store);
-  const colorScheme = useColorScheme();
   const { darkMode } = state;
 
   useEffect(() => {
+    // const loadUserData = async () => {
+    //   if (state.uid === '') {
+    //     const jsonUserData = await AsyncStorage.getItem('userInfo');
+    //     const savedUserData = JSON.parse(jsonUserData);
+    //     const userData = await getUserData(savedUserData.uid);
+    //     console.log('before dispatch userData - ', userData);
+    //     dispatch({ type: 'SET_USER', payload: userData });
+    //   }
+    // };
+    // loadUserData();
+
     const fetchMarketData = async () => {
-      const marketData = await getUserMarketData();
-      setData(marketData);
+      const assetNames = state.assets?.map((asset) => asset.name.toLowerCase());
+      try {
+        const marketData = await getUserMarketData(assetNames);
+        setData(marketData);
+      } catch {
+        (error) => {
+          console.log(error);
+        };
+      }
     };
-    if (colorScheme === 'dark') {
-      dispatch({ type: 'SET_DARK_MODE', payload: true });
-    } else {
-      dispatch({ type: 'SET_DARK_MODE', payload: false });
-    }
     fetchMarketData();
-  }, []);
+    // console.log('portfolio state - ', state);
+  }, [state]);
 
-  const handleSignOut = () => {
-    auth
-      .signOut()
-      .then(navigation.replace('Login'))
-      .catch((error) => {
-        const errorMessage = error.message;
-        console.log(errorMessage);
-      });
-  };
-
-  if (data.length === 0)
+  if (data.length === 0 || state?.assets?.length > 0)
     return (
       <View style={darkMode ? styles.darkContainer : styles.lightContainer}>
         <ActivityIndicator size="large" color="steelblue" />
@@ -49,8 +46,13 @@ const PortfolioScreen = () => {
     );
 
   return (
-    <View style={styles.container}>
-      <UserMarketList title="Market Prices" data={data} principal={null} />
+    <View style={darkMode ? styles.darkContainer : styles.lightContainer}>
+      {/* <UserMarketList
+        title="Total Assets"
+        data={data}
+        principal={state.principal}
+        assets={state.assets}
+      /> */}
     </View>
   );
 };

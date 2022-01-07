@@ -1,5 +1,5 @@
 export const isEmpty = (input) => {
-  return input === '';
+  return input == '';
 };
 
 export const isEmail = (input) => {

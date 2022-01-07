@@ -62,7 +62,9 @@ export const getUserMarketData = async (assetNames) => {
     const response = await axios.get(assetRequest);
 
     const { data } = response;
+
     const formattedResponse = formatMarketData(data);
+
     return formattedResponse;
   } catch (errors) {
     errors.forEach((error) => console.log(error.message));

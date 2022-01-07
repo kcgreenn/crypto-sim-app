@@ -38,13 +38,9 @@ const ListHeader = ({ title, principal }) => (
 
 const MarketList = ({ title, data, principal }) => {
   const [selectedCoinData, setSelectedCoinData] = useState(null);
-
   const bottomSheetModalRef = useRef(null);
-
   const snapPoints = useMemo(() => ['55%'], []);
-
   const handleSheetChanges = () => {};
-
   const { state, dispatch } = useContext(Store);
   const { darkMode } = state;
 
@@ -100,7 +96,7 @@ const MarketList = ({ title, data, principal }) => {
             sparkline={selectedCoinData.sparkline_in_7d.price}
           />
         ) : null}
-        <View style={darkMode ? styles.darkTradeView : lightTradeView}>
+        <View style={darkMode ? styles.darkTradeView : styles.lightTradeView}>
           <TouchableOpacity style={styles.tradeBtn}>
             <Text style={styles.tradeText}>Trade</Text>
           </TouchableOpacity>
@@ -119,7 +115,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     backgroundColor: '#21262d',
-    color: '#c9b08d',
   },
   darkBottomSheet: {
     shadowColor: '#000',

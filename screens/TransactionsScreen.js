@@ -1,11 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import {
   FlatList,
   SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import ListItem from '../components/list/TransactionItem';
@@ -27,8 +26,7 @@ const ListHeader = ({ title, principal }) => (
 
 const TransactionsScreen = () => {
   const { state, dispatch } = useContext(Store);
-  const [darkMode, setDarkMode] = useState(state.darkMode);
-  const colorScheme = useColorScheme();
+  const { darkMode } = state;
   const data = [
     {
       id: 'ok2qj3n',
@@ -55,16 +53,12 @@ const TransactionsScreen = () => {
       date: 'Jan 3, 2021',
     },
   ];
-  useEffect(() => {
-    if (colorScheme === 'dark') {
-      dispatch({ type: 'SET_DARK_MODE', payload: true });
-    } else {
-      dispatch({ type: 'SET_DARK_MODE', payload: false });
-    }
-  }, []);
+
   return (
     <View>
-      <SafeAreaView style={darkMode ? styles.darkContainer : lightContainer}>
+      <SafeAreaView
+        style={darkMode ? styles.darkContainer : styles.lightContainer}
+      >
         <FlatList
           keyExtractor={(item) => item.id}
           data={data}

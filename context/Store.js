@@ -1,44 +1,86 @@
-import React, { createContext, useEffect, useReducer, useState } from 'react';
+import React, { createContext, useEffect, useReducer } from 'react';
 import { useColorScheme } from 'react-native';
+import { loginUser, logoutUser, registerUser } from '../firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const Store = createContext();
 
-const initialState = {
-  darkMode: false,
-  name: '',
-  email: '',
-  principal: 0,
-  domesticCurrency: 'USD',
-  assets: [],
-  transactions: [],
+// Function to handle async dispatch calls
+const wrapAsync = (dispatch) => {
+  return function (action) {
+    if (action.instanceOf(Function)) {
+      return action(dispatch);
+    }
+    return dispatch(action);
+  };
 };
 
-function reducer(state, action) {
+export const reducer = (state, action) => {
   switch (action.type) {
     case 'LOGOUT':
+      logoutUser();
       return {
         ...state,
+        isAuth: false,
         name: '',
         email: '',
+        uid: '',
         principal: 0,
         domesticCurrency: 'USD',
         assets: [],
         transactions: [],
       };
+    case 'LOGIN':
+      const {
+        name,
+        email,
+        uid,
+        principal,
+        domesticCurrency,
+        assets,
+        transactions,
+      } = action.payload;
+      return {
+        ...state,
+        isAuth: true,
+        name,
+        email,
+        uid,
+        principal,
+        domesticCurrency,
+        assets,
+        transactions,
+      };
+    case 'REGISTER':
+      // TODO: Register with firebase and set local user info
+      registerUser(
+        action.payload.username,
+        action.payload.email,
+        action.payload.password
+      );
+      return state;
     case 'SET_DARK_MODE':
       return { ...state, darkMode: action.payload };
     case 'SET_USER':
       return {
-        ...state,
         name: action.payload.name,
         email: action.payload.email,
+        uid: action.payload.uid,
+        principal: action.payload.principal,
+        domesticCurrency: action.payload.domesticCurrency,
+        assets: action.payload.assets,
+        transactions: action.payload.transactions,
       };
     case 'SET_DOMESTIC_CURRENCY':
       // TODO: Save to firestore
       return { ...state, domesticCurrency: action.payload };
+    case 'LOAD_ACCOUNT_INFO':
+      // TODO: LOAD Domestic Currency, Assets, Transactions, Principal
+      return state;
     case 'SET_PRINCIPAL':
       // TODO: Save to firestore
-      return { ...state, principal: action.payload };
+      const newPrincipal = state.principal + action.payload;
+      return { ...state, principal: newPrincipal };
     case 'LOAD_ASSETS':
       return { ...state, assets: action.payload };
     case 'UPDATE_ASSETS':
@@ -66,11 +108,31 @@ function reducer(state, action) {
     default:
       return state;
   }
-}
+};
 
 export function StoreProvider(props) {
+  const getLocalInfo = async () => {
+    const userInfo = await AsyncStorage.getItem('userInfo');
+    return JSON.parse(userInfo);
+  };
+
+  const colorScheme = useColorScheme();
+  const initialState = {
+    darkMode: colorScheme === 'dark',
+    isAuth: false,
+    name: '',
+    email: '',
+    uid: '',
+    principal: 0,
+    domesticCurrency: 'USD',
+    assets: [],
+    transactions: [],
+  };
+
   const [state, dispatch] = useReducer(reducer, initialState);
   const value = { state, dispatch };
+
+  useEffect(async () => {}, [state, value]);
 
   return <Store.Provider value={value}>{props.children}</Store.Provider>;
 }

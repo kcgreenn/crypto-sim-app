@@ -3,62 +3,36 @@ import {
   KeyboardAvoidingView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
-  Switch,
   View,
   Alert,
-  Pressable,
   Modal,
-  useColorScheme,
 } from 'react-native';
-import {
-  auth,
-  db,
-  usersRef,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-} from '../firebase';
-import { signOut } from '@firebase/auth';
+import { auth, setDomesticCurrency } from '../firebase';
 import { useNavigation } from '@react-navigation/core';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Divider } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
-import CurrencyPicker from '../components/CurrencyPicker';
 import { Store } from '../context/Store';
 
 const OptionsScreen = () => {
-  const [currentUser, setCurrentUser] = useState(auth.currentUser);
-  const [darkMode, setDarkMode] = useState(false);
-
+  const user = auth.currentUser;
+  const [currentUser, setCurrentUser] = useState(user);
   const [modalOpen, setModalOpen] = useState(false);
   const { state, dispatch } = useContext(Store);
-  const colorScheme = useColorScheme();
+
   const [nativeCurrency, setNativeCurrency] = useState(state.domesticCurrency);
 
   const navigation = useNavigation();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (colorScheme === 'dark') {
-        dispatch({ type: 'SET_DARK_MODE', payload: true });
-      } else {
-        dispatch({ type: 'SET_DARK_MODE', payload: false });
-      }
-    });
+    const unsubscribe = auth.onAuthStateChanged((user) => {});
+    // console.log(state.balance);
     return unsubscribe;
-  }, [currentUser]);
+  }, [state]);
 
   const handleSignout = () => {
-    signOut(auth)
-      .then((v) => {
-        setCurrentUser(null);
-        dispatch({ type: 'LOGOUT' });
-        navigation.navigate('Login');
-      })
-      .catch((error) => console.log(error.message));
+    // dispatch({ type: 'LOGOUT' });
+    console.log(state);
   };
   const handleReset = () => {
     Alert.alert(
@@ -112,11 +86,11 @@ const OptionsScreen = () => {
   };
 
   const handleCurrencySelect = () => {
+    setDomesticCurrency(state.uid, nativeCurrency);
     dispatch({ type: 'SET_DOMESTIC_CURRENCY', payload: nativeCurrency });
     setModalOpen(!modalOpen);
   };
 
-  const user = auth.currentUser;
   return (
     <KeyboardAvoidingView
       style={state.darkMode ? styles.darkContainer : styles.lightContainer}
@@ -179,16 +153,16 @@ const OptionsScreen = () => {
           flexDirection: 'column',
           justifyContent: 'flex-start',
           alignItems: 'flex-start',
-          paddingLeft: '10%',
+          paddingLeft: 12,
         }}
       >
         <Text
           style={[
             styles.userEmail,
-            { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
+            { color: state.darkMode ? '#c9b08d' : '#0e0e0e' },
           ]}
         >
-          {user.email}
+          {state.email}
         </Text>
         <Text
           style={{
@@ -198,7 +172,7 @@ const OptionsScreen = () => {
             color: state.darkMode ? '#fefefe' : '#0e0e0e',
           }}
         >
-          Test
+          {state.name}
         </Text>
         <Text
           style={[
@@ -325,7 +299,7 @@ const styles = StyleSheet.create({
   darkContainer: {
     flex: 1,
     backgroundColor: '#21262d',
-    paddingTop: 12,
+    // paddingTop: 12,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
@@ -366,8 +340,8 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   buttonContainer: {
-    width: '90%',
-    justifyContent: 'center',
+    width: '95%',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     marginBottom: 48,
   },

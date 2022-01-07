@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Store } from '../../context/Store';
 
 const ListItem = ({
   name,
@@ -20,7 +21,8 @@ const ListItem = ({
   logoUrl,
   onPress,
 }) => {
-  const colorScheme = useColorScheme();
+  const { state, dispatch } = useContext(Store);
+  const { darkMode } = state;
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.itemWrapper}>
@@ -45,20 +47,12 @@ const ListItem = ({
           )}
           {!type && (
             <View style={styles.titleWrapper}>
-              <Text
-                style={
-                  colorScheme === 'dark' ? styles.darkTitle : styles.lightTitle
-                }
-              >
+              <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
                 {quantity > 0 ? `${quantity} - ` : ''}
                 {name}
               </Text>
               <Text
-                style={
-                  colorScheme === 'dark'
-                    ? styles.darkSubtitle
-                    : styles.lightSubtitle
-                }
+                style={darkMode ? styles.darkSubtitle : styles.lightSubtitle}
               >
                 {symbol.toUpperCase()}
               </Text>
@@ -67,11 +61,7 @@ const ListItem = ({
         </View>
 
         <View style={styles.rightWrapper}>
-          <Text
-            style={
-              colorScheme === 'dark' ? styles.darkTitle : styles.lightTitle
-            }
-          >
+          <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
             $
             {quantity > 0
               ? (currentPrice * quantity).toLocaleString('en-US', {
@@ -124,6 +114,7 @@ const styles = StyleSheet.create({
   darkTitle: {
     fontSize: 18,
     color: '#c9b08d',
+    // color: 'black',
   },
   lightTitle: {
     fontSize: 18,
