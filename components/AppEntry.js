@@ -44,105 +44,92 @@ export default function AppEntry() {
       }
     };
     await getUser();
-    console.log('appentry state - ', state);
-    // return subscriber; // Unsubscribe on component unmount
+    return subscriber; // Unsubscribe on component unmount
   }, [state]);
 
   if (initializing) return null;
 
   if (!user) {
     return (
-      <StoreProvider>
-        <NavigationContainer>
-          <Tabs.Navigator barStyle={{ backgroundColor: '#343a40' }}>
-            <Tabs.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{
-                tabBarLabel: 'Login',
-                tabBarIcon: ({ color }) => (
-                  <MaterialCommunityIcons
-                    name="login"
-                    color={color}
-                    size={26}
-                  />
-                ),
-              }}
-            />
-            <Tabs.Screen
-              name="Register"
-              component={RegisterScreen}
-              options={{
-                tabBarLabel: 'Register',
-                tabBarIcon: ({ color }) => (
-                  <MaterialCommunityIcons
-                    name="account-plus"
-                    color={color}
-                    size={26}
-                  />
-                ),
-              }}
-            />
-          </Tabs.Navigator>
-        </NavigationContainer>
-      </StoreProvider>
-    );
-  }
-  return (
-    <StoreProvider>
       <NavigationContainer>
         <Tabs.Navigator barStyle={{ backgroundColor: '#343a40' }}>
           <Tabs.Screen
-            name="Home"
-            component={HomeScreen}
+            name="Login"
+            component={LoginScreen}
             options={{
-              tabBarLabel: 'Home',
+              tabBarLabel: 'Login',
               tabBarIcon: ({ color }) => (
-                <MaterialCommunityIcons name="home" color={color} size={26} />
+                <MaterialCommunityIcons name="login" color={color} size={26} />
               ),
             }}
           />
           <Tabs.Screen
-            name="Portfolio"
-            component={PortfolioScreen}
+            name="Register"
+            component={RegisterScreen}
             options={{
-              tabBarLabel: 'Portfolio',
+              tabBarLabel: 'Register',
               tabBarIcon: ({ color }) => (
                 <MaterialCommunityIcons
-                  name="chart-bar"
+                  name="account-plus"
                   color={color}
                   size={26}
                 />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="Transactions"
-            component={TransactionsScreen}
-            options={{
-              tabBarLabel: 'History',
-              tabBarIcon: ({ color }) => (
-                <MaterialCommunityIcons
-                  name="history"
-                  color={color}
-                  size={26}
-                />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="Profile"
-            component={OptionsScreen}
-            options={{
-              tabBarLabel: 'Profile',
-              tabBarIcon: ({ color }) => (
-                <MaterialCommunityIcons name="cog" color={color} size={26} />
               ),
             }}
           />
         </Tabs.Navigator>
       </NavigationContainer>
-    </StoreProvider>
+    );
+  }
+  return (
+    <NavigationContainer>
+      <Tabs.Navigator barStyle={{ backgroundColor: '#343a40' }}>
+        <Tabs.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            tabBarLabel: 'Home',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="home" color={color} size={26} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Portfolio"
+          component={PortfolioScreen}
+          options={{
+            tabBarLabel: 'Portfolio',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons
+                name="chart-bar"
+                color={color}
+                size={26}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Transactions"
+          component={TransactionsScreen}
+          options={{
+            tabBarLabel: 'History',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="history" color={color} size={26} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Profile"
+          component={OptionsScreen}
+          options={{
+            tabBarLabel: 'Profile',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="cog" color={color} size={26} />
+            ),
+          }}
+        />
+      </Tabs.Navigator>
+    </NavigationContainer>
   );
 }
 

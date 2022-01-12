@@ -31,8 +31,7 @@ const OptionsScreen = () => {
   }, [state]);
 
   const handleSignout = () => {
-    // dispatch({ type: 'LOGOUT' });
-    console.log(state);
+    dispatch({ type: 'LOGOUT' });
   };
   const handleReset = () => {
     Alert.alert(
@@ -219,7 +218,10 @@ const OptionsScreen = () => {
                 { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
               ]}
             >
-              {state.principal}
+              {state.principal.toLocaleString('en-US', {
+                style: 'currency',
+                currency: state.domesticCurrency,
+              })}
             </Text>
           </View>
           <TouchableOpacity style={styles.button} onPress={handleReset}>

@@ -44,63 +44,50 @@ const usersRef = collection(db, 'users');
 
 // Login to existing user account
 const loginUser = async (email, password) => {
-  const loggedInUser = await signInWithEmailAndPassword(auth, email, password)
-    .then(async (userCredential) => {
-      const user = userCredential.user;
-      return user;
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.log(errorMessage);
-    });
-  const userData = getUserData;
-  return userData;
+  try {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    const userData = await getUserData(user.uid, email);
+    return userData;
+  } catch {
+    (error) => console.log(error);
+  }
 };
 // Create new user account
-const registerUser = (username, email, password) => {
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(async (userCredential) => {
-      const { user } = userCredential;
-      const defaultPrincipal = 10000;
-      const defaultCurrency = 'USD';
-      // Create user document in firestore
-      const docRef = await setDoc(doc(db, 'users', user.uid), {
-        name: username,
-        email: email,
-        principal: defaultPrincipal,
-        domesticCurrency: defaultCurrency,
-        assets: [],
-        transactions: [],
-      });
-      // dispatch({
-      //   type: 'SET_USER',
-      //   payload: { name: username, email: email, uid: user.uid },
-      // });
-      // dispatch({ type: 'SET_PRINCIPAL', payload: defaultPrincipal });
-      // dispatch({ type: 'SET_DOMESTIC_CURRENCY', payload: defaultCurrency });
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.log(errorMessage);
+const registerUser = async (username, email, password) => {
+  try {
+    const { user } = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const defaultPrincipal = 10000;
+    const defaultCurrency = 'USD';
+    // Create user document in firestore
+    const docRef = await setDoc(doc(db, 'users', user.uid), {
+      name: username,
+      email: email,
+      principal: defaultPrincipal,
+      domesticCurrency: defaultCurrency,
+      assets: [],
+      transactions: [],
     });
+    console.log(docRef);
+  } catch {
+    (error) => console.log(error);
+  }
 };
 
 // Get user data
-const getUserData = async (uid) => {
+const getUserData = async (uid, email) => {
   try {
     // Get user info from firebase
     const docRef = doc(db, 'users', uid);
     const docSnap = await getDoc(docRef);
-    // console.log('docsnap - ', docSnap);
     if (docSnap.exists()) {
-      //   console.log('docSnap exists - ', docSnap.data());
       const data = docSnap.data();
       return {
         name: data.name,
-        email: email,
-        uid: loggedInUser.uid,
+        uid: uid,
         principal: data.principal,
         domesticCurrency: data.domesticCurrency,
         assets: data.assets,
@@ -113,12 +100,17 @@ const getUserData = async (uid) => {
     };
   }
 };
-const logoutUser = () => {
-  signOut(auth)
-    .then((v) => {
-      console.log('logged out');
-    })
-    .catch((error) => console.log(error.message));
+const logoutUser = async () => {
+  try {
+    await signOut(auth);
+  } catch {
+    (error) => console.log(error);
+  }
+
+  // .then((v) => {
+  //   console.log('logged out');
+  // })
+  // .catch((error) => console.log(error.message));
 };
 
 // Set the domestic currency of the user
@@ -140,30 +132,25 @@ const setDomesticCurrency = async (uid, newCurrency) => {
   return updatedUser;
 };
 
-// Update the account balance
-const updateAccountBalance = async (uid, newBalance) => {
-  try {
-    const updatedUser = await setDoc(
-      doc(db, 'users', uid),
-      { balance: newBalance },
-      { merge: true }
-    );
-  } catch {
-    (error) => {
-      console.log(error);
-    };
-  }
-  return updatedUser;
-};
-
 // Add transaction to transactions list
-const recordTransaction = async (uid, updatedTransactionList) => {
+const recordTransaction = async (
+  uid,
+  transactionList,
+  newPrincipal,
+  updatedAssets
+) => {
   try {
+    console.log('inside recordTransaction');
     const updatedUser = await setDoc(
       doc(db, 'users', uid),
-      { transactions: updatedTransactionList },
+      {
+        principal: newPrincipal,
+        transactions: transactionList,
+        assets: updatedAssets,
+      },
       { merge: true }
     );
+    return updatedUser;
   } catch {
     (error) => {
       console.log(error);
@@ -172,14 +159,15 @@ const recordTransaction = async (uid, updatedTransactionList) => {
 };
 
 // Update assets list
-const updateAssets = async (uid, updatedAsset) => {
+const updateAssets = async (uid, assetList, newAsset) => {
   try {
+    console.log(assetList.includes((asset) => asset.name === newAsset.name));
     // TODO: update assets instead of transactions
-    const updatedUser = await setDoc(
-      doc(db, 'users', uid),
-      { transactions: updatedTransactionList },
-      { merge: true }
-    );
+    // const updatedUser = await setDoc(
+    //   doc(db, 'users', uid),
+    //   { transactions: updatedTransactionList },
+    //   { merge: true }
+    // );
   } catch {
     (error) => {
       console.log(error);
@@ -197,6 +185,7 @@ export {
   getUserData,
   logoutUser,
   setDomesticCurrency,
+  recordTransaction,
   collection,
   doc,
   addDoc,

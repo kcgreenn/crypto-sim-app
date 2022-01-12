@@ -4,72 +4,44 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { Store } from '../../context/Store';
 
 const TransactionItem = ({
-  name,
-  symbol,
-  quantity,
-  currentPrice,
-  priceChangePercentage7d,
+  boughtCoinName,
   coinAmount,
+  dollarAmount,
+  soldCoinName,
   date,
-  logoUrl,
   onPress,
+  returnToDate,
 }) => {
   const { state, dispatch } = useContext(Store);
   const { darkMode } = state;
-
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.itemWrapper}>
         <View style={styles.leftWrapper}>
-          {coinAmount > 0 ? (
-            <Text
-              style={[
-                darkMode ? styles.darkTitle : styles.lightMode,
-                { fontSize: 18, fontWeight: 'bold' },
-              ]}
-            >
-              Converted from {name}
-            </Text>
-          ) : (
-            <Text
-              style={[
-                darkMode ? styles.darkTitle : styles.lightMode,
-                { fontSize: 18, fontWeight: 'bold' },
-              ]}
-            >
-              Converted to {name}
-            </Text>
-          )}
+          <Text
+            style={[
+              darkMode ? styles.darkTitle : styles.lightMode,
+              { fontSize: 18, fontWeight: 'bold' },
+            ]}
+          >
+            Converted to {boughtCoinName}
+          </Text>
           <Text style={darkMode ? styles.darkSubtitle : styles.lightSubtitle}>
-            Using USD
+            Using {soldCoinName}
           </Text>
         </View>
         <View style={styles.rightWrapper}>
           <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
-            {coinAmount}
+            {boughtCoinName === 'USD' ? dollarAmount : coinAmount.toFixed(6)}
           </Text>
-          {priceChangePercentage7d ? (
-            <Text
-              style={[
-                styles.subtitle,
-                { color: priceChangePercentage7d > 0 ? '#34C759' : '#FF3B30' },
-              ]}
-            >
-              {priceChangePercentage7d.toFixed(2)}%
-            </Text>
-          ) : (
-            <Text
-              style={[
-                darkMode ? styles.darkSubtitle : styles.lightSubtitle,
-                { color: '#34c759' },
-              ]}
-            >
-              {(currentPrice * coinAmount).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-              })}
-            </Text>
-          )}
+          <Text
+            style={[
+              darkMode ? styles.darkSubtitle : styles.lightSubtitle,
+              { color: '#34c759' },
+            ]}
+          >
+            {date}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

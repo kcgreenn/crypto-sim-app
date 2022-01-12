@@ -11,10 +11,14 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const fetchMarketData = async () => {
-      const marketData = await getMarketData();
+      const marketData = await getMarketData(state.domesticCurrency);
       setData(marketData);
     };
+    const interval = setInterval(() => {
+      fetchMarketData();
+    }, 60000);
     fetchMarketData();
+    return () => clearInterval(interval);
   }, [state]);
 
   if (data.length === 0)

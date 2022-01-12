@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import ListItem from '../components/list/TransactionItem';
+import TransactionItem from '../components/list/TransactionItem';
 import { Store } from '../context/Store';
 
 const ListHeader = ({ title, principal }) => (
@@ -27,32 +27,11 @@ const ListHeader = ({ title, principal }) => (
 const TransactionsScreen = () => {
   const { state, dispatch } = useContext(Store);
   const { darkMode } = state;
-  const data = [
-    {
-      id: 'ok2qj3n',
-      name: 'Bitcoin',
-      symbol: 'btc',
-      pricePerCoin: 23504,
-      coinAmount: -0.2,
-      date: 'Jan 13, 2021',
-    },
-    {
-      id: 'n34la',
-      name: 'Bitcoin',
-      symbol: 'btc',
-      pricePerCoin: 13504,
-      coinAmount: 1,
-      date: 'Jan 1, 2021',
-    },
-    {
-      id: 'nl4q',
-      name: 'Ethereum',
-      symbol: 'eth',
-      pricePerCoin: 1203,
-      coinAmount: 0.8,
-      date: 'Jan 3, 2021',
-    },
-  ];
+  const data = state.transactions.sort((a, b) => {
+    a.id - b.id;
+  });
+
+  useEffect(() => {}, [state.transactions]);
 
   return (
     <View>
@@ -63,11 +42,10 @@ const TransactionsScreen = () => {
           keyExtractor={(item) => item.id}
           data={data}
           renderItem={({ item }) => (
-            <ListItem
-              name={item.name}
-              symbol={item.symbol}
-              type={item.type}
-              currentPrice={item.pricePerCoin}
+            <TransactionItem
+              boughtCoinName={item.boughtCoinName}
+              dollarAmount={item.dollarAmount}
+              soldCoinName={item.soldCoinName}
               date={item.date}
               coinAmount={item.coinAmount}
             />

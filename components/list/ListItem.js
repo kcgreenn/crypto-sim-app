@@ -27,47 +27,34 @@ const ListItem = ({
     <TouchableOpacity onPress={onPress}>
       <View style={styles.itemWrapper}>
         <View style={styles.leftWrapper}>
-          {type ? (
-            type === 'buy' ? (
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-                Converted from {name}
-              </Text>
-            ) : (
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-                Converted to {name}
-              </Text>
-            )
-          ) : (
-            <Image
-              source={{
-                uri: logoUrl,
-              }}
-              style={styles.image}
-            />
-          )}
-          {!type && (
-            <View style={styles.titleWrapper}>
-              <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
-                {quantity > 0 ? `${quantity} - ` : ''}
-                {name}
-              </Text>
-              <Text
-                style={darkMode ? styles.darkSubtitle : styles.lightSubtitle}
-              >
-                {symbol.toUpperCase()}
-              </Text>
-            </View>
-          )}
+          <Image
+            source={{
+              uri: logoUrl,
+            }}
+            style={styles.image}
+          />
+          <View style={styles.titleWrapper}>
+            <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
+              {quantity > 0 ? `${quantity} - ` : ''}
+              {name}
+            </Text>
+            <Text style={darkMode ? styles.darkSubtitle : styles.lightSubtitle}>
+              {symbol.toUpperCase()}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.rightWrapper}>
           <Text style={darkMode ? styles.darkTitle : styles.lightTitle}>
-            $
             {quantity > 0
               ? (currentPrice * quantity).toLocaleString('en-US', {
-                  currency: 'USD',
+                  style: 'currency',
+                  currency: state.domesticCurrency,
                 })
-              : currentPrice.toLocaleString('en-US', { currency: 'USD' })}
+              : currentPrice.toLocaleString('en-US', {
+                  style: 'currency',
+                  currency: state.domesticCurrency,
+                })}
           </Text>
           {priceChangePercentage7d ? (
             <Text

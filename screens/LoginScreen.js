@@ -32,18 +32,26 @@ const LoginScreen = () => {
     try {
       // Submit login information to firebase
       const userInfo = await loginUser(email, password);
-      // Save user info to application state
+      userInfo.darkMode = darkMode;
+      // Save user info to local storage and Store
       dispatch({
-        type: 'LOGIN',
-        payload: userInfo,
+        type: 'SET_USER',
+        payload: {
+          name: userInfo.name,
+          email: email,
+          uid: userInfo.uid,
+          principal: userInfo.principal,
+          domesticCurrency: userInfo.domesticCurrency,
+          assets: userInfo.assets,
+          transactions: userInfo.transactions,
+        },
       });
-      // Save user info to local storage
       await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
     } catch (error) {
       console.log(error);
     }
   };
-  useEffect(() => {}, []);
+  useEffect(() => {}, [state]);
   return (
     <KeyboardAvoidingView
       style={darkMode ? styles.darkContainer : styles.lightContainer}

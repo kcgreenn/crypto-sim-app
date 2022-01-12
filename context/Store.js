@@ -19,37 +19,18 @@ export const reducer = (state, action) => {
   switch (action.type) {
     case 'LOGOUT':
       logoutUser();
-      return {
-        ...state,
-        isAuth: false,
-        name: '',
-        email: '',
-        uid: '',
-        principal: 0,
-        domesticCurrency: 'USD',
-        assets: [],
-        transactions: [],
-      };
+      return state;
     case 'LOGIN':
-      const {
-        name,
-        email,
-        uid,
-        principal,
-        domesticCurrency,
-        assets,
-        transactions,
-      } = action.payload;
       return {
         ...state,
         isAuth: true,
-        name,
-        email,
-        uid,
-        principal,
-        domesticCurrency,
-        assets,
-        transactions,
+        name: action.payload.name,
+        email: action.payload.email,
+        uid: action.payload.uid,
+        principal: action.payload.principal,
+        domesticCurrency: action.payload.domesticCurrency,
+        assets: action.payload.assets,
+        transactions: action.payload.transactions,
       };
     case 'REGISTER':
       // TODO: Register with firebase and set local user info
@@ -63,6 +44,8 @@ export const reducer = (state, action) => {
       return { ...state, darkMode: action.payload };
     case 'SET_USER':
       return {
+        ...state,
+        isAuth: true,
         name: action.payload.name,
         email: action.payload.email,
         uid: action.payload.uid,
@@ -71,6 +54,13 @@ export const reducer = (state, action) => {
         assets: action.payload.assets,
         transactions: action.payload.transactions,
       };
+    case 'RECORD_TRANSACTION':
+      return {
+        ...state,
+        transactions: action.payload.transactions,
+        principal: action.payload.principal,
+        assets: action.payload.assets,
+      };
     case 'SET_DOMESTIC_CURRENCY':
       // TODO: Save to firestore
       return { ...state, domesticCurrency: action.payload };
@@ -78,9 +68,7 @@ export const reducer = (state, action) => {
       // TODO: LOAD Domestic Currency, Assets, Transactions, Principal
       return state;
     case 'SET_PRINCIPAL':
-      // TODO: Save to firestore
-      const newPrincipal = state.principal + action.payload;
-      return { ...state, principal: newPrincipal };
+      return { ...state, principal: action.payload };
     case 'LOAD_ASSETS':
       return { ...state, assets: action.payload };
     case 'UPDATE_ASSETS':
@@ -99,9 +87,7 @@ export const reducer = (state, action) => {
     case 'LOAD_TRANSACTIONS':
       return { ...state, transactions: action.payload };
     case 'UPDATE_TRANSACTIONS':
-      const newTransaction = action.payload;
-      const updatedTransactions = state.transactions.push(newTransaction);
-      // TODO: Save to firestore
+      const updatedTransactions = action.payload;
       return { ...state, updatedTransactions };
     case 'DELETE_ACCOUNT':
     // TODO: delete account from firebase
