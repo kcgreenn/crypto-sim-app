@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { isEmpty } from '../services/inputValidation';
 import { Store } from '../context/Store';
-import { loginUser } from '../firebase';
+import { auth, loginUser } from '../firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
@@ -51,7 +51,7 @@ const LoginScreen = () => {
       console.log(error);
     }
   };
-  useEffect(() => {}, [state]);
+  useEffect(() => {}, []);
   return (
     <KeyboardAvoidingView
       style={darkMode ? styles.darkContainer : styles.lightContainer}
@@ -71,6 +71,7 @@ const LoginScreen = () => {
         <TextInput
           placeholder="Email"
           style={styles.input}
+          returnKeyType="done"
           value={email}
           onChangeText={(text) => setEmail(text)}
         ></TextInput>
@@ -80,6 +81,7 @@ const LoginScreen = () => {
         <TextInput
           placeholder="Password"
           secureTextEntry
+          returnKeyType="done"
           style={styles.input}
           value={password}
           onChangeText={(text) => setPassword(text)}

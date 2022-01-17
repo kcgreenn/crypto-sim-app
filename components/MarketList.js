@@ -54,6 +54,7 @@ const MarketList = ({ title, data, principal }) => {
   const { darkMode } = state;
   const [tradeAmount, setTradeAmount] = useState(0);
   const [tradeCoinAmount, setTradeCoinAmount] = useState(0);
+  const [transactionSuccess, setTransactionSuccess] = useState(false);
 
   const openBottomModal = (item) => {
     setSelectedCoinData(item);
@@ -74,17 +75,12 @@ const MarketList = ({ title, data, principal }) => {
   };
 
   const handleBuyPress = async () => {
-    if (
-      state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
-    ) {
-      if (
-        tradeCoinAmount >
-        state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
-          .amount
-      ) {
-        Alert.alert('You do not own enough of this coin for this trade.');
-        return;
-      }
+    if (tradeAmount == 0) {
+      return;
+    }
+    if (tradeAmount > state.principal) {
+      Alert.alert('You do not have enough money for this trade.');
+      return;
     }
     const formattedToday = createDate();
     // Collect transaction data
@@ -105,6 +101,12 @@ const MarketList = ({ title, data, principal }) => {
         (asset) => asset.name === selectedCoinData.name
       );
       updatedAssetsList[updatedElementIndex].amount += tradeCoinAmount;
+    } else {
+      updatedAssetsList.push({
+        amount: tradeCoinAmount,
+        name: selectedCoinData.name,
+        symbol: selectedCoinData.symbol,
+      });
     }
     // Update transaction list
     const updatedTransactions = state.transactions;
@@ -131,9 +133,14 @@ const MarketList = ({ title, data, principal }) => {
     setTradeAmount(0);
     setTradeCoinAmount(0);
     setTradeModalVisible(!tradeModalVisible);
+    setTransactionSuccess(true);
+    Alert.alert('Transaction Successful');
   };
 
   const handleSellPress = async () => {
+    if (tradeCoinAmount == 0) {
+      return;
+    }
     if (
       state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
     ) {
@@ -160,11 +167,17 @@ const MarketList = ({ title, data, principal }) => {
     const newBalance = state.principal + tradeAmount;
     // Update asset list
     const updatedAssetsList = state.assets;
+    let removedAssetsList;
     if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
       const updatedElementIndex = state.assets.findIndex(
         (asset) => asset.name === selectedCoinData.name
       );
       updatedAssetsList[updatedElementIndex].amount -= tradeCoinAmount;
+      if (updatedAssetsList[updatedElementIndex].amount === 0) {
+        removedAssetsList = updatedAssetsList.filter(
+          (asset) => asset.symbol !== selectedCoinData.symbol
+        );
+      }
     }
     // Update transaction list
     const updatedTransactions = state.transactions;
@@ -174,7 +187,7 @@ const MarketList = ({ title, data, principal }) => {
       state.uid,
       updatedTransactions,
       newBalance,
-      updatedAssetsList
+      removedAssetsList
     );
     // Save account info to state
     dispatch({
@@ -191,6 +204,17 @@ const MarketList = ({ title, data, principal }) => {
     setTradeAmount(0);
     setTradeCoinAmount(0);
     setTradeModalVisible(!tradeModalVisible);
+    setTransactionSuccess(true);
+    Alert.alert('Transaction Successful');
+  };
+
+  const handleSellMaxPress = async () => {
+    if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
+      setTradeCoinAmount(
+        state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
+          .amount
+      );
+    }
   };
 
   if (data === undefined) {
@@ -207,6 +231,7 @@ const MarketList = ({ title, data, principal }) => {
           visible={tradeModalVisible}
           onRequestClose={() => {
             setTradeModalVisible(!tradeModalVisible);
+            setTransactionSuccess(false);
           }}
         >
           <Pressable
@@ -269,11 +294,11 @@ const MarketList = ({ title, data, principal }) => {
                 <CurrencyInput
                   value={tradeCoinAmount}
                   onChangeValue={(value) => handleCoinInput(value)}
-                  suffix=" btc"
+                  suffix={` ${selectedCoinData.symbol}`}
                   delimiter=","
                   returnKeyType="done"
                   separator="."
-                  precision={8}
+                  precision={4}
                   onChangeText={(formattedValue) => {}}
                   style={{
                     color: '#fefefe',
@@ -289,11 +314,18 @@ const MarketList = ({ title, data, principal }) => {
                 />
                 <View
                   style={{
-                    flexDirection: 'row',
+                    flexDirection: 'column',
                     justifyContent: 'space-between',
                     width: '80%',
                   }}
                 >
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonClose]}
+                    onPress={handleBuyPress}
+                  >
+                    <Text style={styles.textStyle}>Buy</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity
                     style={[styles.button, styles.buttonClose]}
                     onPress={handleSellPress}
@@ -302,9 +334,9 @@ const MarketList = ({ title, data, principal }) => {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.button, styles.buttonClose]}
-                    onPress={handleBuyPress}
+                    onPress={handleSellMaxPress}
                   >
-                    <Text style={styles.textStyle}>Buy</Text>
+                    <Text style={styles.textStyle}>Sell Max</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -469,7 +501,7 @@ const styles = StyleSheet.create({
   modalView: {
     margin: 20,
     width: '75%',
-    height: '50%',
+    height: '60%',
     backgroundColor: '#282a36',
     borderRadius: 20,
     padding: 35,

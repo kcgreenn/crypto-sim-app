@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -8,8 +8,10 @@ import {
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
-import { isEmpty, isMatch } from '../services/inputValidation';
+import { isEmail, isEmpty, isMatch } from '../services/inputValidation';
 import { Store } from '../context/Store';
+import { auth, registerUser } from '../firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RegisterScreen = () => {
   const [email, setEmail] = useState('');
@@ -20,7 +22,7 @@ const RegisterScreen = () => {
   const { darkMode } = state;
   const navigation = useNavigation();
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     // Validate Inputs
     if (isEmpty(username)) {
       alert('Username is required');
@@ -42,12 +44,37 @@ const RegisterScreen = () => {
       alert('Passwords do not match');
       return;
     }
+    try {
+      // Submit login information to firebase
+      console.log('before register user');
+      const userInfo = await registerUser(username, email, password);
+      console.log(userInfo);
+      console.log('after register user');
+      userInfo.darkMode = darkMode;
+      // Save user info to local storage and Store
+      dispatch({
+        type: 'SET_USER',
+        payload: {
+          name: userInfo.name,
+          email: email,
+          uid: userInfo.uid,
+          principal: userInfo.principal,
+          domesticCurrency: userInfo.domesticCurrency,
+          assets: userInfo.assets,
+          transactions: userInfo.transactions,
+        },
+      });
+      await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
+    } catch (error) {
+      console.log(error);
+    }
     // Create new user
     dispatch({
       type: 'REGISTER',
-      payload: { username: username, email: email, password: password },
+      payload: { username: username, email: email, uid: userInfo.uid },
     });
   };
+  useEffect(() => {}, []);
 
   return (
     <KeyboardAvoidingView
@@ -71,6 +98,7 @@ const RegisterScreen = () => {
           placeholder="Name"
           style={styles.input}
           value={username}
+          returnKeyType="done"
           onChangeText={(text) => setUsername(text)}
         ></TextInput>
         <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
@@ -80,6 +108,7 @@ const RegisterScreen = () => {
           placeholder="Email"
           style={styles.input}
           value={email}
+          returnKeyType="done"
           onChangeText={(text) => setEmail(text)}
         ></TextInput>
         <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
@@ -90,6 +119,7 @@ const RegisterScreen = () => {
           secureTextEntry
           style={styles.input}
           value={password}
+          returnKeyType="done"
           onChangeText={(text) => setPassword(text)}
         ></TextInput>
         <Text style={{ color: darkMode ? '#dedede' : '#3e3e3e', marginTop: 6 }}>
@@ -100,6 +130,7 @@ const RegisterScreen = () => {
           secureTextEntry
           style={styles.input}
           value={confirmPassword}
+          returnKeyType="done"
           onChangeText={(text) => setConfirmPassword(text)}
         ></TextInput>
       </View>

@@ -11,66 +11,81 @@ import TransactionItem from '../components/list/TransactionItem';
 import { Store } from '../context/Store';
 
 const ListHeader = ({ title, principal }) => (
-  <React.Fragment>
-    <View style={styles.titleWrapper}>
-      <Text style={styles.title}>{title}</Text>
-      {principal !== null ? (
-        <Text style={styles.subtitle}>
-          ${principal.toLocaleString('en-US', { currency: 'USD' })}
-        </Text>
-      ) : null}
-    </View>
-    <View style={styles.divider} />
-  </React.Fragment>
+  <View style={styles.titleWrapper}>
+    <Text style={styles.title}>{title}</Text>
+    {principal !== null ? (
+      <Text style={styles.subtitle}>
+        ${principal.toLocaleString('en-US', { currency: 'USD' })}
+      </Text>
+    ) : null}
+  </View>
 );
 
 const TransactionsScreen = () => {
   const { state, dispatch } = useContext(Store);
-  const { darkMode } = state;
-  const data = state.transactions.sort((a, b) => {
-    a.id - b.id;
-  });
+  const data = state.transactions.sort((a, b) => b.id - a.id);
 
-  useEffect(() => {}, [state.transactions]);
+  useEffect(() => {}, [state]);
 
-  return (
-    <View>
-      <SafeAreaView
-        style={darkMode ? styles.darkContainer : styles.lightContainer}
+  if (state.transactions.length === 0) {
+    return (
+      <View
+        style={state.darkMode ? styles.darkContainer : styles.lightContainer}
       >
-        <FlatList
-          keyExtractor={(item) => item.id}
-          data={data}
-          renderItem={({ item }) => (
-            <TransactionItem
-              boughtCoinName={item.boughtCoinName}
-              dollarAmount={item.dollarAmount}
-              soldCoinName={item.soldCoinName}
-              date={item.date}
-              coinAmount={item.coinAmount}
-            />
-          )}
-          ListHeaderComponent={
-            <ListHeader title="Transaction History" principal={null} />
-          }
-        />
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </View>
+        <Text
+          style={{
+            fontSize: 48,
+            textAlign: 'center',
+            paddingHorizontal: 18,
+            color: state.darkMode ? '#dedede' : '#3e3e3e',
+          }}
+        >
+          You have not made any transactions yet.
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <SafeAreaView
+      style={state.darkMode ? styles.darkContainer : styles.lightContainer}
+    >
+      <FlatList
+        keyExtractor={(item) => item.id}
+        data={data}
+        style={{
+          width: '100%',
+        }}
+        renderItem={({ item }) => (
+          <TransactionItem
+            boughtCoinName={item.boughtCoinName}
+            dollarAmount={item.dollarAmount}
+            soldCoinName={item.soldCoinName}
+            date={item.date}
+            coinAmount={item.coinAmount}
+          />
+        )}
+        ListHeaderComponent={
+          <ListHeader title="Transaction History" principal={null} />
+        }
+      />
+      <StatusBar style="auto" />
+    </SafeAreaView>
   );
 };
 
 export default TransactionsScreen;
 
 const styles = StyleSheet.create({
+  darkContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#21262d',
+  },
   lightContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '100%',
     backgroundColor: '#fefefe',
-  },
-  darkContainer: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#21262d',
   },
   titleWrapper: {
     marginTop: 16,

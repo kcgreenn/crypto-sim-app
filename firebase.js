@@ -52,33 +52,36 @@ const loginUser = async (email, password) => {
     (error) => console.log(error);
   }
 };
+
 // Create new user account
 const registerUser = async (username, email, password) => {
-  try {
-    const { user } = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const defaultPrincipal = 10000;
-    const defaultCurrency = 'USD';
-    // Create user document in firestore
-    const docRef = await setDoc(doc(db, 'users', user.uid), {
-      name: username,
-      email: email,
-      principal: defaultPrincipal,
-      domesticCurrency: defaultCurrency,
-      assets: [],
-      transactions: [],
-    });
-    console.log(docRef);
-  } catch {
-    (error) => console.log(error);
-  }
+  console.log('outside try block');
+  // try {
+  console.log('inside registerUser - ', username);
+  // Create new user account
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
+  console.log('after create user');
+  // Create profile with default values
+  const defaultPrincipal = 10000;
+  const defaultCurrency = 'USD';
+  // Create user document in firestore
+  await setDoc(doc(db, 'users', user.uid), {
+    name: username,
+    email: email,
+    principal: defaultPrincipal,
+    domesticCurrency: defaultCurrency,
+    assets: [],
+    transactions: [],
+  });
+  const userData = await getUserData(user.uid);
+  return userData;
+  // } catch {
+  //   (error) => console.log(error);
+  // }
 };
 
 // Get user data
-const getUserData = async (uid, email) => {
+const getUserData = async (uid) => {
   try {
     // Get user info from firebase
     const docRef = doc(db, 'users', uid);
@@ -123,13 +126,13 @@ const setDomesticCurrency = async (uid, newCurrency) => {
       },
       { merge: true }
     );
+
+    return updatedUser;
   } catch {
     (error) => {
       console.log(error);
     };
   }
-
-  return updatedUser;
 };
 
 // Add transaction to transactions list

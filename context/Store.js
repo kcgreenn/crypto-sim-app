@@ -18,13 +18,22 @@ const wrapAsync = (dispatch) => {
 export const reducer = (state, action) => {
   switch (action.type) {
     case 'LOGOUT':
-      logoutUser();
-      return state;
+      return {
+        ...state,
+        isAuth: false,
+        uid: '',
+        username: '',
+        email: '',
+        assets: [],
+        principal: 10000,
+        transactions: [],
+        domesticCurrency: 'USD',
+      };
     case 'LOGIN':
       return {
         ...state,
         isAuth: true,
-        name: action.payload.name,
+        username: action.payload.name,
         email: action.payload.email,
         uid: action.payload.uid,
         principal: action.payload.principal,
@@ -33,20 +42,24 @@ export const reducer = (state, action) => {
         transactions: action.payload.transactions,
       };
     case 'REGISTER':
-      // TODO: Register with firebase and set local user info
-      registerUser(
-        action.payload.username,
-        action.payload.email,
-        action.payload.password
-      );
-      return state;
+      return {
+        ...state,
+        isAuth: true,
+        username: action.payload.username,
+        email: action.payload.email,
+        uid: action.payload.uid,
+        principal: 10000,
+        domesticCurrency: 'USD',
+        assets: [],
+        transactions: [],
+      };
     case 'SET_DARK_MODE':
       return { ...state, darkMode: action.payload };
     case 'SET_USER':
       return {
         ...state,
         isAuth: true,
-        name: action.payload.name,
+        username: action.payload.name,
         email: action.payload.email,
         uid: action.payload.uid,
         principal: action.payload.principal,
@@ -60,6 +73,13 @@ export const reducer = (state, action) => {
         transactions: action.payload.transactions,
         principal: action.payload.principal,
         assets: action.payload.assets,
+      };
+    case 'RESET_ACCOUNT':
+      return {
+        ...state,
+        principal: action.payload.principal,
+        assets: action.payload.assets,
+        transactions: action.payload.transactions,
       };
     case 'SET_DOMESTIC_CURRENCY':
       // TODO: Save to firestore
@@ -106,7 +126,7 @@ export function StoreProvider(props) {
   const initialState = {
     darkMode: colorScheme === 'dark',
     isAuth: false,
-    name: '',
+    username: '',
     email: '',
     uid: '',
     principal: 0,

@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Alert,
   FlatList,
   Image,
   Modal,
@@ -19,11 +20,12 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import UserListItem from './list/UserListItem';
 import Chart from './Chart';
-import { AsyncStorage } from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
 import { Store } from '../context/Store';
 import { recordTransaction } from '../firebase';
 import CurrencyInput from 'react-native-currency-input';
+import { createDate } from '../services/dateService';
 
 export const ListHeader = ({ title, totalValue, principal }) => (
   <React.Fragment>
@@ -86,17 +88,9 @@ const UserMarketList = ({ title, data, assets, principal }) => {
   };
 
   const handleBuyPress = async () => {
-    if (
-      state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
-    ) {
-      if (
-        tradeCoinAmount >
-        state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
-          .amount
-      ) {
-        Alert.alert('You do not own enough of this coin for this trade.');
-        return;
-      }
+    if (tradeAmount > state.principal) {
+      Alert.alert('You do not have enough money for this trade.');
+      return;
     }
     const formattedToday = createDate();
     // Collect transaction data
@@ -117,6 +111,12 @@ const UserMarketList = ({ title, data, assets, principal }) => {
         (asset) => asset.name === selectedCoinData.name
       );
       updatedAssetsList[updatedElementIndex].amount += tradeCoinAmount;
+    } else {
+      updatedAssetsList.push({
+        amount: tradeCoinAmount,
+        name: selectedCoinData.name,
+        symbol: selectedCoinData.symbol,
+      });
     }
     // Update transaction list
     const updatedTransactions = state.transactions;
@@ -143,6 +143,7 @@ const UserMarketList = ({ title, data, assets, principal }) => {
     setTradeAmount(0);
     setTradeCoinAmount(0);
     setTradeModalVisible(!tradeModalVisible);
+    Alert.alert('Transaction Successful');
   };
 
   const handleSellPress = async () => {
@@ -172,11 +173,17 @@ const UserMarketList = ({ title, data, assets, principal }) => {
     const newBalance = state.principal + tradeAmount;
     // Update asset list
     const updatedAssetsList = state.assets;
+    let removedAssetsList;
     if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
       const updatedElementIndex = state.assets.findIndex(
         (asset) => asset.name === selectedCoinData.name
       );
       updatedAssetsList[updatedElementIndex].amount -= tradeCoinAmount;
+      if (updatedAssetsList[updatedElementIndex].amount === 0) {
+        removedAssetsList = updatedAssetsList.filter(
+          (asset) => asset.symbol !== selectedCoinData.symbol
+        );
+      }
     }
     // Update transaction list
     const updatedTransactions = state.transactions;
@@ -186,7 +193,7 @@ const UserMarketList = ({ title, data, assets, principal }) => {
       state.uid,
       updatedTransactions,
       newBalance,
-      updatedAssetsList
+      removedAssetsList
     );
     // Save account info to state
     dispatch({
@@ -203,6 +210,16 @@ const UserMarketList = ({ title, data, assets, principal }) => {
     setTradeAmount(0);
     setTradeCoinAmount(0);
     setTradeModalVisible(!tradeModalVisible);
+    Alert.alert('Transaction Successful');
+  };
+
+  const handleSellMaxPress = async () => {
+    if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
+      setTradeCoinAmount(
+        state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
+          .amount
+      );
+    }
   };
 
   useEffect(() => {
@@ -286,11 +303,11 @@ const UserMarketList = ({ title, data, assets, principal }) => {
                 <CurrencyInput
                   value={tradeCoinAmount}
                   onChangeValue={(value) => handleCoinInput(value)}
-                  suffix=" btc"
+                  suffix={` ${selectedCoinData.symbol}`}
                   delimiter=","
                   returnKeyType="done"
                   separator="."
-                  precision={8}
+                  precision={4}
                   onChangeText={(formattedValue) => {}}
                   style={{
                     color: '#fefefe',
@@ -306,11 +323,18 @@ const UserMarketList = ({ title, data, assets, principal }) => {
                 />
                 <View
                   style={{
-                    flexDirection: 'row',
+                    flexDirection: 'column',
                     justifyContent: 'space-between',
                     width: '80%',
                   }}
                 >
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonClose]}
+                    onPress={handleBuyPress}
+                  >
+                    <Text style={styles.textStyle}>Buy</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity
                     style={[styles.button, styles.buttonClose]}
                     onPress={handleSellPress}
@@ -319,9 +343,9 @@ const UserMarketList = ({ title, data, assets, principal }) => {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.button, styles.buttonClose]}
-                    onPress={handleBuyPress}
+                    onPress={handleSellMaxPress}
                   >
-                    <Text style={styles.textStyle}>Buy</Text>
+                    <Text style={styles.textStyle}>Sell Max</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -506,7 +530,7 @@ const styles = StyleSheet.create({
   modalView: {
     margin: 20,
     width: '75%',
-    height: '50%',
+    height: '60%',
     backgroundColor: '#282a36',
     borderRadius: 20,
     padding: 35,

@@ -8,11 +8,17 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { auth, setDomesticCurrency } from '../firebase';
+import {
+  auth,
+  logoutUser,
+  recordTransaction,
+  setDomesticCurrency,
+} from '../firebase';
 import { useNavigation } from '@react-navigation/core';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { Store } from '../context/Store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OptionsScreen = () => {
   const user = auth.currentUser;
@@ -26,11 +32,11 @@ const OptionsScreen = () => {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {});
-    // console.log(state.balance);
     return unsubscribe;
   }, [state]);
 
   const handleSignout = () => {
+    logoutUser();
     dispatch({ type: 'LOGOUT' });
   };
   const handleReset = () => {
@@ -44,7 +50,26 @@ const OptionsScreen = () => {
         },
         {
           text: 'Confirm',
-          onPress: () => console.log('Account Reset'),
+          onPress: () => {
+            // Reset account to default values
+            const defaultPrincipal = 10000;
+            const defaultTransactions = [];
+            const defaultAssets = [];
+            recordTransaction(
+              state.uid,
+              defaultTransations,
+              defaultPrincipal,
+              defaultAssets
+            );
+            dispatch({
+              type: 'RESET_ACCOUNT',
+              payload: {
+                principal: defaultPrincipal,
+                assets: defaultAssets,
+                transactions: defaultTransactions,
+              },
+            });
+          },
         },
       ],
       {
@@ -158,7 +183,7 @@ const OptionsScreen = () => {
         <Text
           style={[
             styles.userEmail,
-            { color: state.darkMode ? '#c9b08d' : '#0e0e0e' },
+            { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
           ]}
         >
           {state.email}
@@ -171,7 +196,7 @@ const OptionsScreen = () => {
             color: state.darkMode ? '#fefefe' : '#0e0e0e',
           }}
         >
-          {state.name}
+          {state.username}
         </Text>
         <Text
           style={[
@@ -231,7 +256,7 @@ const OptionsScreen = () => {
                 { color: state.darkMode ? '#fefefe' : '#0e0e0e' },
               ]}
             >
-              Reset Balances
+              Reset Account
             </Text>
             <MaterialCommunityIcons
               name="chevron-right"
@@ -269,19 +294,6 @@ const OptionsScreen = () => {
               Sign Out
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.buttonOutline,
-              {
-                backgroundColor: state.darkMode ? '#3e3e3e' : '#fefefe',
-              },
-            ]}
-            onPress={handleAccountDelete}
-          >
-            <Text style={[styles.buttonOutlineText, styles.dangerText]}>
-              Delete Account
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -294,14 +306,12 @@ const styles = StyleSheet.create({
   lightContainer: {
     flex: 1,
     backgroundColor: '#fefefe',
-    paddingTop: 12,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
   darkContainer: {
     flex: 1,
     backgroundColor: '#21262d',
-    // paddingTop: 12,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },

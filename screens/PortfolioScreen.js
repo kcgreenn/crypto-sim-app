@@ -1,10 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import UserMarketList from '../components/UserMarketList';
 import { getUserMarketData } from '../services/cryptoService';
 import { Store } from '../context/Store';
-import { getUserData } from '../firebase';
 
 const PortfolioScreen = () => {
   const [data, setData] = useState([]);
@@ -13,21 +11,45 @@ const PortfolioScreen = () => {
 
   useEffect(() => {
     const fetchMarketData = async () => {
-      const assetNames = state.assets?.map((asset) => asset.name.toLowerCase());
       try {
-        const marketData = await getUserMarketData(
-          assetNames,
-          state.domesticCurrency
-        );
-        setData(marketData);
+        if (state.assets.length > 0) {
+          const assetNames = state.assets.map((asset) =>
+            asset.name.toLowerCase()
+          );
+          const marketData = await getUserMarketData(
+            assetNames,
+            state.domesticCurrency
+          );
+          setData(marketData);
+        }
       } catch {
         (error) => {
           console.log(error);
         };
       }
     };
+    const interval = setInterval(() => {
+      fetchMarketData();
+    }, 60000);
     fetchMarketData();
+    return () => clearInterval(interval);
   }, [state]);
+
+  if (state.assets.length === 0)
+    return (
+      <View style={darkMode ? styles.darkContainer : styles.lightContainer}>
+        <Text
+          style={{
+            fontSize: 48,
+            textAlign: 'center',
+            paddingHorizontal: 18,
+            color: darkMode ? '#dedede' : '#3e3e3e',
+          }}
+        >
+          You have not bought any coins yet.
+        </Text>
+      </View>
+    );
 
   if (data.length === 0)
     return (
