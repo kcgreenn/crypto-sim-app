@@ -45,7 +45,7 @@ export const ListHeader = ({ title, totalValue, principal }) => (
   </React.Fragment>
 );
 
-const UserMarketList = ({ title, data, assets, principal }) => {
+const UserMarketList = ({ title, data, principal }) => {
   const [selectedCoinData, setSelectedCoinData] = useState(null);
   const [totalValue, setTotalValue] = useState(0);
   const { state, dispatch } = useContext(Store);
@@ -56,10 +56,14 @@ const UserMarketList = ({ title, data, assets, principal }) => {
   const bottomSheetModalRef = useRef(null);
   const snapPoints = useMemo(() => ['55%'], []);
   const handleSheetChanges = () => {};
+  const [formattedAssets, setFormattedAssets] = useState(
+    state.assets.filter((asset) => asset.amount > 0.0)
+  );
+  const [cryptoData, setCryptoData] = useState(data);
 
   const calcTotalValue = () => {
     let tempTotalValue = 0;
-    assets?.forEach((asset, index) => {
+    formattedAssets?.forEach((asset, index) => {
       tempTotalValue += data[index].current_price * asset.amount;
     });
     tempTotalValue += principal;
@@ -88,6 +92,9 @@ const UserMarketList = ({ title, data, assets, principal }) => {
   };
 
   const handleBuyPress = async () => {
+    if (tradeAmount === 0.0 || tradeCoinAmount === 0.0) {
+      return;
+    }
     if (tradeAmount > state.principal) {
       Alert.alert('You do not have enough money for this trade.');
       return;
@@ -106,9 +113,11 @@ const UserMarketList = ({ title, data, assets, principal }) => {
     const newBalance = state.principal - tradeAmount;
     // Update asset list
     const updatedAssetsList = state.assets;
-    if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
+    if (
+      state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
+    ) {
       const updatedElementIndex = state.assets.findIndex(
-        (asset) => asset.name === selectedCoinData.name
+        (asset) => asset.symbol === selectedCoinData.symbol
       );
       updatedAssetsList[updatedElementIndex].amount += tradeCoinAmount;
     } else {
@@ -147,13 +156,13 @@ const UserMarketList = ({ title, data, assets, principal }) => {
   };
 
   const handleSellPress = async () => {
-    if (
-      state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
-    ) {
+    if (tradeAmount === 0.0 || tradeCoinAmount === 0.0) {
+      return;
+    }
+    if (state.assets.find((asset) => asset.id === selectedCoinData.id)) {
       if (
         tradeCoinAmount >
-        state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
-          .amount
+        state.assets.find((asset) => asset.id === selectedCoinData.id).amount
       ) {
         Alert.alert('You do not own enough of this coin for this trade.');
         return;
@@ -172,16 +181,19 @@ const UserMarketList = ({ title, data, assets, principal }) => {
     // Subtract from principal
     const newBalance = state.principal + tradeAmount;
     // Update asset list
-    const updatedAssetsList = state.assets;
-    let removedAssetsList;
-    if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
+    let updatedAssetsList = state.assets;
+
+    if (state.assets.find((asset) => asset.id === selectedCoinData.id)) {
       const updatedElementIndex = state.assets.findIndex(
-        (asset) => asset.name === selectedCoinData.name
+        (asset) => asset.id === selectedCoinData.id
       );
       updatedAssetsList[updatedElementIndex].amount -= tradeCoinAmount;
-      if (updatedAssetsList[updatedElementIndex].amount === 0) {
-        removedAssetsList = updatedAssetsList.filter(
-          (asset) => asset.symbol !== selectedCoinData.symbol
+      if (updatedAssetsList[updatedElementIndex].amount === 0.0) {
+        updatedAssetsList = updatedAssetsList.filter(
+          (asset) => asset.id !== selectedCoinData.id
+        );
+        setCryptoData(
+          cryptoData.filter((datum) => datum.id !== selectedCoinData.id)
         );
       }
     }
@@ -193,7 +205,7 @@ const UserMarketList = ({ title, data, assets, principal }) => {
       state.uid,
       updatedTransactions,
       newBalance,
-      removedAssetsList
+      updatedAssetsList
     );
     // Save account info to state
     dispatch({
@@ -214,7 +226,7 @@ const UserMarketList = ({ title, data, assets, principal }) => {
   };
 
   const handleSellMaxPress = async () => {
-    if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
+    if (state.assets.find((asset) => asset.id === selectedCoinData.id)) {
       setTradeCoinAmount(
         state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
           .amount
@@ -222,9 +234,13 @@ const UserMarketList = ({ title, data, assets, principal }) => {
     }
   };
 
+  const handleBuyMaxPress = () => {
+    setTradeAmount(state.principal);
+  };
+
   useEffect(() => {
     calcTotalValue();
-  }, [assets]);
+  }, [state.assets, cryptoData]);
 
   if (data === undefined) {
     return <ActivityIndicator />;
@@ -323,30 +339,39 @@ const UserMarketList = ({ title, data, assets, principal }) => {
                 />
                 <View
                   style={{
-                    flexDirection: 'column',
+                    flexDirection: 'row',
                     justifyContent: 'space-between',
-                    width: '80%',
+                    width: '100%',
                   }}
                 >
-                  <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={handleBuyPress}
-                  >
-                    <Text style={styles.textStyle}>Buy</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={handleSellPress}
-                  >
-                    <Text style={styles.textStyle}>Sell</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={handleSellMaxPress}
-                  >
-                    <Text style={styles.textStyle}>Sell Max</Text>
-                  </TouchableOpacity>
+                  <View>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleSellPress}
+                    >
+                      <Text style={styles.textStyle}>Sell</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleSellMaxPress}
+                    >
+                      <Text style={styles.textStyle}>Sell Max</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleBuyPress}
+                    >
+                      <Text style={styles.textStyle}>Buy</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleBuyMaxPress}
+                    >
+                      <Text style={styles.textStyle}>Buy Max</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
@@ -354,13 +379,14 @@ const UserMarketList = ({ title, data, assets, principal }) => {
         </Modal>
         <FlatList
           keyExtractor={(item) => item.id}
-          data={data}
+          data={cryptoData}
           renderItem={({ item }) => (
             <UserListItem
-              name={item.name}
+              name={item.id[0].toUpperCase() + item.id.substring(1)}
               symbol={item.symbol}
               quantity={
-                assets.find((element) => element.name === item.name).amount
+                state.assets.find((element) => element.name === item.name)
+                  .amount
               }
               currentPrice={item.current_price}
               priceChangePercentage7d={
@@ -370,7 +396,7 @@ const UserMarketList = ({ title, data, assets, principal }) => {
               onPress={() => openModal(item)}
               returnToDate={calcReturn(
                 item.current_price,
-                assets.find((element) => element.name === item.name)
+                state.assets.find((element) => element.name === item.name)
                   .boughtAtPrice
               )}
             />
@@ -547,9 +573,9 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 5,
-    marginVertical: 12,
+    marginVertical: 6,
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     elevation: 2,
   },
   currencyInputLabel: {

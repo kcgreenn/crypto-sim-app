@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import UserMarketList from '../components/UserMarketList';
 import { getUserMarketData } from '../services/cryptoService';
 import { Store } from '../context/Store';
+import { getUserData } from '../firebase';
 
 const PortfolioScreen = () => {
   const [data, setData] = useState([]);
@@ -10,16 +11,28 @@ const PortfolioScreen = () => {
   const { darkMode } = state;
 
   useEffect(() => {
+    const getUserAssets = async () => {
+      try {
+        const { assets } = await getUserData(state.uid);
+        dispatch({ type: 'SET_ASSETS', payload: assets });
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
     const fetchMarketData = async () => {
       try {
         if (state.assets.length > 0) {
-          const assetNames = state.assets.map((asset) =>
-            asset.name.toLowerCase()
+          const filterredAssets = state?.assets?.filter(
+            (asset) => asset.amount > 0.0
           );
+          const assetIds = filterredAssets.map((asset) => asset.id);
+
           const marketData = await getUserMarketData(
-            assetNames,
+            assetIds,
             state.domesticCurrency
           );
+
           setData(marketData);
         }
       } catch {
@@ -30,12 +43,13 @@ const PortfolioScreen = () => {
     };
     const interval = setInterval(() => {
       fetchMarketData();
-    }, 60000);
+    }, 300000);
     fetchMarketData();
+
     return () => clearInterval(interval);
   }, [state]);
 
-  if (state.assets.length === 0)
+  if (state?.assets?.length === 0)
     return (
       <View style={darkMode ? styles.darkContainer : styles.lightContainer}>
         <Text
@@ -64,7 +78,7 @@ const PortfolioScreen = () => {
         title="Total Assets"
         data={data}
         principal={state.principal}
-        assets={state.assets}
+        assets={state.assets.filter((asset) => asset.amount > 0.0)}
       />
     </View>
   );

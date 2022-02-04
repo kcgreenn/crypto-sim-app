@@ -89,6 +89,8 @@ export const reducer = (state, action) => {
       return state;
     case 'SET_PRINCIPAL':
       return { ...state, principal: action.payload };
+    case 'SET_ASSETS':
+      return { ...state, assets: action.payload.assets };
     case 'LOAD_ASSETS':
       return { ...state, assets: action.payload };
     case 'UPDATE_ASSETS':

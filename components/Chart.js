@@ -48,15 +48,19 @@ const Chart = ({
   const formatUSD = (value) => {
     'worklet';
     if (value === '') {
-      const formattedValue = `$${latestCurrentPrice.value.toLocaleString(
+      const formattedValue = `${latestCurrentPrice.value.toLocaleString(
         'en-US',
-        { currency: 'USD' }
+        { style: 'currency', currency: 'USD' }
       )}`;
       return formattedValue;
     }
-    const formattedValue = `$${parseFloat(value)
-      .toFixed(2)
-      .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+    // const formattedValue = `$${parseFloat(value)
+    //   .toFixed(2)
+    //   .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+    const formattedValue = `${latestCurrentPrice.value.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    })}`;
     return formattedValue;
   };
   const Item = Picker.Item;

@@ -43,7 +43,7 @@ const formatMarketData = (data) => {
 export const getMarketData = async (domesticCurrency) => {
   try {
     const response = await axios.get(
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${domesticCurrency}&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=7d`
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${domesticCurrency}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=7d`
     );
     const { data } = response;
     const formattedResponse = formatMarketData(data);
@@ -53,9 +53,14 @@ export const getMarketData = async (domesticCurrency) => {
   }
 };
 
-export const getUserMarketData = async (assetNames, domesticCurrency) => {
-  const assetCalls = assetNames.join('%2C%20');
-
+export const getUserMarketData = async (assetIds, domesticCurrency) => {
+  let assetCalls;
+  if (assetIds.length > 1) {
+    assetCalls = assetIds.join('%2C%20');
+  } else {
+    assetCalls = assetIds[0];
+  }
+  console.log('inside getUserdata');
   const assetRequest = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${domesticCurrency}&ids=${assetCalls}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=7d`;
 
   try {
@@ -64,7 +69,6 @@ export const getUserMarketData = async (assetNames, domesticCurrency) => {
     const { data } = response;
 
     const formattedResponse = formatMarketData(data);
-
     return formattedResponse;
   } catch (errors) {
     errors.forEach((error) => console.log(error.message));

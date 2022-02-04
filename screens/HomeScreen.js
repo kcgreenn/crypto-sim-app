@@ -16,7 +16,7 @@ const HomeScreen = () => {
     };
     const interval = setInterval(() => {
       fetchMarketData();
-    }, 60000);
+    }, 300000);
     fetchMarketData();
     return () => clearInterval(interval);
   }, [state]);

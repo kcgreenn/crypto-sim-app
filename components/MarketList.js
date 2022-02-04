@@ -29,15 +29,35 @@ import { Store } from '../context/Store';
 import { recordTransaction, updateAccountBalance } from '../firebase';
 import { createDate } from '../services/dateService';
 
-const ListHeader = ({ title, principal }) => (
+const ListHeader = ({ title, principal, handleSearchInput }) => (
   <React.Fragment>
     <View style={styles.titleWrapper}>
       <Text style={styles.title}>{title}</Text>
+      <Text style={{ color: 'gray' }}>7d</Text>
       {principal !== null ? (
         <Text style={styles.subtitle}>
           ${principal.toLocaleString('en-US', { currency: 'USD' })}
         </Text>
       ) : null}
+    </View>
+    <View style={{ flexDirection: 'row' }}>
+      <Text style={{ paddingLeft: 18, width: '15%', marginTop: 4 }}>
+        <MaterialCommunityIcons name="magnify" color={'#6e6e6e'} size={26} />
+      </Text>
+      <TextInput
+        onChangeText={handleSearchInput}
+        style={{
+          paddingLeft: 8,
+          marginTop: 4,
+          height: 24,
+          fontSize: 24,
+          width: '80%',
+          color: '#9e9e9e',
+          borderColor: '#3e3e3e',
+          borderRadius: 10,
+          // borderWidth: 1,
+        }}
+      ></TextInput>
     </View>
     <View style={styles.divider} />
   </React.Fragment>
@@ -75,7 +95,7 @@ const MarketList = ({ title, data, principal }) => {
   };
 
   const handleBuyPress = async () => {
-    if (tradeAmount == 0) {
+    if (tradeAmount == 0.0 || tradeCoinAmount == 0.0) {
       return;
     }
     if (tradeAmount > state.principal) {
@@ -105,6 +125,7 @@ const MarketList = ({ title, data, principal }) => {
       updatedAssetsList.push({
         amount: tradeCoinAmount,
         name: selectedCoinData.name,
+        id: selectedCoinData.id,
         symbol: selectedCoinData.symbol,
       });
     }
@@ -138,7 +159,7 @@ const MarketList = ({ title, data, principal }) => {
   };
 
   const handleSellPress = async () => {
-    if (tradeCoinAmount == 0) {
+    if (tradeAmount == 0.0 || tradeCoinAmount == 0.0) {
       return;
     }
     if (
@@ -166,15 +187,15 @@ const MarketList = ({ title, data, principal }) => {
     // Subtract from principal
     const newBalance = state.principal + tradeAmount;
     // Update asset list
-    const updatedAssetsList = state.assets;
-    let removedAssetsList;
+    let updatedAssetsList = state.assets;
+
     if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
       const updatedElementIndex = state.assets.findIndex(
         (asset) => asset.name === selectedCoinData.name
       );
       updatedAssetsList[updatedElementIndex].amount -= tradeCoinAmount;
-      if (updatedAssetsList[updatedElementIndex].amount === 0) {
-        removedAssetsList = updatedAssetsList.filter(
+      if (updatedAssetsList[updatedElementIndex].amount === 0.0) {
+        updatedAssetsList = updatedAssetsList.filter(
           (asset) => asset.symbol !== selectedCoinData.symbol
         );
       }
@@ -187,7 +208,7 @@ const MarketList = ({ title, data, principal }) => {
       state.uid,
       updatedTransactions,
       newBalance,
-      removedAssetsList
+      updatedAssetsList
     );
     // Save account info to state
     dispatch({
@@ -209,13 +230,19 @@ const MarketList = ({ title, data, principal }) => {
   };
 
   const handleSellMaxPress = async () => {
-    if (state.assets.find((asset) => asset.name === selectedCoinData.name)) {
+    if (state.assets.find((asset) => asset.id === selectedCoinData.id)) {
       setTradeCoinAmount(
         state.assets.find((asset) => asset.symbol === selectedCoinData.symbol)
           .amount
       );
     }
   };
+
+  const handleBuyMaxPress = () => {
+    setTradeAmount(state.principal);
+  };
+
+  const handleSearchInput = () => {};
 
   if (data === undefined) {
     return <ActivityIndicator />;
@@ -314,30 +341,39 @@ const MarketList = ({ title, data, principal }) => {
                 />
                 <View
                   style={{
-                    flexDirection: 'column',
+                    flexDirection: 'row',
                     justifyContent: 'space-between',
-                    width: '80%',
+                    width: '100%',
                   }}
                 >
-                  <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={handleBuyPress}
-                  >
-                    <Text style={styles.textStyle}>Buy</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={handleSellPress}
-                  >
-                    <Text style={styles.textStyle}>Sell</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={handleSellMaxPress}
-                  >
-                    <Text style={styles.textStyle}>Sell Max</Text>
-                  </TouchableOpacity>
+                  <View>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleSellPress}
+                    >
+                      <Text style={styles.textStyle}>Sell</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleSellMaxPress}
+                    >
+                      <Text style={styles.textStyle}>Sell Max</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleBuyPress}
+                    >
+                      <Text style={styles.textStyle}>Buy</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.buttonClose]}
+                      onPress={handleBuyMaxPress}
+                    >
+                      <Text style={styles.textStyle}>Buy Max</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
@@ -348,7 +384,7 @@ const MarketList = ({ title, data, principal }) => {
           data={data}
           renderItem={({ item }) => (
             <ListItem
-              name={item.name}
+              name={item.id[0].toUpperCase() + item.id.substring(1)}
               symbol={item.symbol}
               currentPrice={item.current_price}
               priceChangePercentage7d={
@@ -359,7 +395,11 @@ const MarketList = ({ title, data, principal }) => {
             />
           )}
           ListHeaderComponent={
-            <ListHeader title={title} principal={principal} />
+            <ListHeader
+              title={title}
+              principal={principal}
+              handleSearchInput={handleSearchInput}
+            />
           }
         />
         <StatusBar style="auto" />
@@ -518,9 +558,9 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 5,
-    marginVertical: 12,
+    marginVertical: 6,
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     elevation: 2,
   },
   currencyInputLabel: {
