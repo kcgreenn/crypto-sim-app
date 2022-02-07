@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle":"automatic",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -18,13 +18,13 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier":"com.kylogen.crypto-sim",
-      "buildNumber":"1.0.0",
+      "bundleIdentifier": "com.kylogen.crypto-sim",
+      "buildNumber": "1.0.0",
       "supportsTablet": true
     },
     "android": {
-      "package":"com.kylogen.crypto-sim",
-      "versionCode":1,
+      "package": "com.kylogen.cryptoSim",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -32,6 +32,21 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "sentry-expo"
+    ],
+    "hooks":{
+      "postPublish":[
+        {
+          "file":"sentry-expo/upload-sourcemaps",
+          "config":{
+            "organization":"strangways",
+            "project":"crypto-sim",
+            "authToken":"be5c3781e3b04ef78fc83421614c1f2e343ddc2cd0094d87811b59850ae2b17b"
+          }
+        }
+      ]
     }
   }
 }

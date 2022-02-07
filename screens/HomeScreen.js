@@ -1,9 +1,22 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Button, StyleSheet, View } from 'react-native';
 
 import MarketList from '../components/MarketList';
 import { Store } from '../context/Store';
 import { getMarketData } from '../services/cryptoService';
+import ErrorBoundary from 'react-native-error-boundary';
+
+const errorHandler = (error, stackTrace) => {
+  throw error;
+};
+
+const CustomFallback = ({ error, resetError }) => {
+  <View>
+    <Text>Something went wrong!</Text>
+    <Text>{error.toString()}</Text>
+    <Button onPress={resetError} title={Reset} />
+  </View>;
+};
 
 const HomeScreen = () => {
   const [data, setData] = useState([]);
@@ -29,9 +42,11 @@ const HomeScreen = () => {
     );
 
   return (
-    <View style={styles.container}>
-      <MarketList title="Market Prices" data={data} principal={null} />
-    </View>
+    <ErrorBoundary onError={errorHandler} FallbackComponent={CustomFallback}>
+      <View style={styles.container}>
+        <MarketList title="Market Prices" data={data} principal={null} />
+      </View>
+    </ErrorBoundary>
   );
 };
 

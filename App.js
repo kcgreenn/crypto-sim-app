@@ -14,10 +14,17 @@ import TransactionsScreen from './screens/TransactionsScreen';
 import { Store, StoreProvider } from './context/Store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppEntry from './components/AppEntry';
+import * as Sentry from 'sentry-expo';
 
 const Tabs = createMaterialBottomTabNavigator();
 
 const Stack = createNativeStackNavigator();
+
+Sentry.init({
+  dsn: 'https://62f6f09f21644bd4bd896b65241b4fd5@o302933.ingest.sentry.io/6191096',
+  enableInExpoDevelopment: true,
+  debug: true,
+});
 
 export default function App() {
   const [initializing, setInitializing] = useState(true);

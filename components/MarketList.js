@@ -77,8 +77,12 @@ const MarketList = ({ title, data, principal }) => {
   const [transactionSuccess, setTransactionSuccess] = useState(false);
 
   const openBottomModal = (item) => {
-    setSelectedCoinData(item);
-    bottomSheetModalRef.current.present();
+    try {
+      setSelectedCoinData(item);
+      bottomSheetModalRef.current.present();
+    } catch (err) {
+      throw err;
+    }
   };
 
   const openTradeModal = () => {
