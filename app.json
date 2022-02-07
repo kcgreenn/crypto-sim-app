@@ -19,7 +19,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.kylogen.crypto-sim",
-      "buildNumber": "1.0.0",
+      "buildNumber": "1.0.1",
       "supportsTablet": true
     },
     "android": {
